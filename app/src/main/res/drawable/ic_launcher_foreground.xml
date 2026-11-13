@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Bottom keycap -->
+    <path android:fillColor="@color/launcher_key_side" android:pathData="M32,75h44a5,5 0,0 1,5 5v1a5,5 0,0 1,-5 5H32a5,5 0,0 1,-5 -5v-1a5,5 0,0 1,5 -5z" />
+    <path android:fillColor="@color/launcher_key_face" android:pathData="M32,70h44a5,5 0,0 1,5 5v1a5,5 0,0 1,-5 5H32a5,5 0,0 1,-5 -5v-1a5,5 0,0 1,5 -5z" />
+
+    <!-- Middle keycap -->
+    <path android:fillColor="@color/launcher_key_side" android:pathData="M35,60h38a5,5 0,0 1,5 5v1a5,5 0,0 1,-5 5H35a5,5 0,0 1,-5 -5v-1a5,5 0,0 1,5 -5z" />
+    <path android:fillColor="@color/launcher_key_face" android:pathData="M35,55h38a5,5 0,0 1,5 5v1a5,5 0,0 1,-5 5H35a5,5 0,0 1,-5 -5v-1a5,5 0,0 1,5 -5z" />
+
+    <!-- Top keycap and a compact typing mark -->
+    <path android:fillColor="@color/launcher_key_side" android:pathData="M40,38h28a6,6 0,0 1,6 6v9a6,6 0,0 1,-6 6H40a6,6 0,0 1,-6 -6v-9a6,6 0,0 1,6 -6z" />
+    <path android:fillColor="@color/launcher_key_face" android:pathData="M40,32h28a6,6 0,0 1,6 6v9a6,6 0,0 1,-6 6H40a6,6 0,0 1,-6 -6v-9a6,6 0,0 1,6 -6z" />
+    <path android:fillColor="@color/launcher_key_glyph" android:pathData="M44,38h18a2.5,2.5 0,0 1,0 5H44a2.5,2.5 0,0 1,0 -5zM44,45h12v3H44a2.5,2.5 0,0 1,0 -5h12v3z" />
+</vector>

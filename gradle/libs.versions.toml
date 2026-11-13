@@ -1,0 +1,14 @@
+[versions]
+agp = "9.4.1"
+kotlin = "2.4.20"
+junit = "4.13.2"
+core-splashscreen = "1.2.0"
+
+[libraries]
+junit = { module = "junit:junit", version.ref = "junit" }
+core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "core-splashscreen" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

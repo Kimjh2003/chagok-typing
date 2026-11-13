@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="launcher_background">#101712</color>
+    <color name="launcher_key_side">#A0B4A6</color>
+    <color name="launcher_key_face">#223029</color>
+    <color name="launcher_key_glyph">#D5DFD8</color>
+</resources>
