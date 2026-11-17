@@ -85,3 +85,9 @@ While the practice session is READY, no periodic metrics callback is scheduled. 
 
 ## 0.28 — completion accuracy
 New results use NFC-normalized Unicode code point Levenshtein distance divided by the longer text length (empty input yields zero). Over one million comparison cells, a positional fallback bounds completion work; this can score large pastes differently. Existing saved accuracy is never recalculated. Text-derived typing units and input callbacks remain unchanged.
+# Language-specific typing units
+
+`TypingUnitPolicy` in `:practice` provides additive changed-range counts, selected when starting or restoring a session. Korean uses the existing jamo-weighted `TypingUnits` policy; English counts printable ASCII U+0020–U+007E as one unit each and excludes other characters and newlines. Both report units per active minute, not physical keystrokes. A policy cannot change mid-session. Existing saved records retain their original stored values; future English records may differ for mixed Korean/English input. This does not migrate or recalculate history.
+
+After an input edit the session still updates synchronously using only changed ranges. The app coalesces metric and progress display updates into a single next-frame callback, canceling a pending callback when the practice view is replaced or destroyed. The 200ms timer updates elapsed metrics only; input-length progress changes only with edits. Completion reads the session directly and does not depend on the pending display update. Device latency or frame-time improvements have not been measured.
+

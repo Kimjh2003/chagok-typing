@@ -43,6 +43,27 @@ class PracticeLogicTest {
         assertEquals(0, TypingUnits.perMinute(1, 0))
     }
 
+    @Test fun languagePoliciesFollowIncrementalEditsAndRestore() {
+        val session = PracticeSession(Clock(), EnglishTypingUnitPolicy)
+        session.beforeChange("", 0, 0)
+        session.afterChange("A 한!", 0, 4)
+        assertEquals(3, session.units)
+        session.beforeChange("A 한!", 2, 1)
+        session.afterChange("A z!", 2, 1)
+        assertEquals(4, session.units)
+        session.beforeChange("A z!", 1, 2)
+        session.afterChange("A!", 1, 0)
+        assertEquals(2, session.units)
+        session.reset()
+        session.setUnitPolicy(KoreanTypingUnitPolicy)
+        session.restore("한!", 1200, true, false)
+        assertEquals(4, session.units)
+        try {
+            session.setUnitPolicy(EnglishTypingUnitPolicy)
+            fail("Changing policy during a restored exercise must fail")
+        } catch (_: IllegalStateException) { }
+    }
+
     @Test fun compositionCorrectionsAndPasteUseOnlyCurrentText() {
         val session = PracticeSession(Clock())
         var text = ""

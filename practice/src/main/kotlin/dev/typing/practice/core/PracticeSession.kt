@@ -3,7 +3,7 @@ package dev.typing.practice.core
 import java.util.function.LongSupplier
 
 /** Main-thread state only. LongSupplier keeps clock reads primitive on the JVM. */
-class PracticeSession(private val clock: LongSupplier) {
+class PracticeSession(private val clock: LongSupplier, private var unitPolicy: TypingUnitPolicy = KoreanTypingUnitPolicy) {
     enum class State { READY, RUNNING, PAUSED, FINISHED }
     var state = State.READY
         private set
@@ -15,6 +15,12 @@ class PracticeSession(private val clock: LongSupplier) {
     private var removedUnits = 0
     private var result: FinalScore? = null
 
+    /** Select a policy only between exercises or before restoring a saved session. */
+    fun setUnitPolicy(policy: TypingUnitPolicy) {
+        check(state == State.READY) { "Cannot change the unit policy during an exercise" }
+        unitPolicy = policy
+    }
+
     fun reset() {
         state = State.READY
         accumulated = 0
@@ -25,7 +31,7 @@ class PracticeSession(private val clock: LongSupplier) {
     }
 
     fun restore(text: CharSequence, elapsed: Long, hasStarted: Boolean, finished: Boolean) {
-        units = TypingUnits.count(text)
+        units = unitPolicy.count(text, 0, text.length)
         removedUnits = 0
         result = null
         accumulated = elapsed.coerceAtLeast(0)
@@ -37,12 +43,12 @@ class PracticeSession(private val clock: LongSupplier) {
     }
 
     fun beforeChange(text: CharSequence, start: Int, count: Int) {
-        if (state != State.FINISHED) removedUnits = TypingUnits.count(text, start, start + count)
+        if (state != State.FINISHED) removedUnits = unitPolicy.count(text, start, start + count)
     }
 
     fun afterChange(text: CharSequence, start: Int, count: Int) {
         if (state == State.FINISHED) return
-        units = (units + TypingUnits.count(text, start, start + count) - removedUnits).coerceAtLeast(0)
+        units = (units + unitPolicy.count(text, start, start + count) - removedUnits).coerceAtLeast(0)
         removedUnits = 0
         if (state == State.READY && text.isNotEmpty()) {
             startedAt = clock.asLong

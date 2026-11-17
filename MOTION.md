@@ -86,3 +86,7 @@ Scene entry (460ms), async history reveal (260ms), button press/release (140/300
 The practice editor and metrics do not animate on entry or while typing. Only its encouragement header uses the scene fade; keyboard and input-card movement continue to follow system IME insets and timing. Animation-disabled settings skip property animations; drawable state fade settings are evaluated when controls are created. This does not establish frame performance or visual comfort on physical devices.
 
 Reference: https://developer.apple.com/design/human-interface-guidelines/motion
+
+## Transition flow cleanup
+
+History rows are assembled as one detached group before attaching it to the visible list; data loading and scroll restoration remain asynchronous and unchanged. The completion button uses the shared button haptic once, while completion through the IME retains its own confirmation feedback. Navigation, scoring, saving and IME timing are not delayed. Device frame-time improvement has not been measured.

@@ -57,14 +57,18 @@ class MainActivity : Activity() {
     private var practiceHint: TextView? = null
     private var practiceHeader: View? = null
     private var practiceProgress: PracticeProgressView? = null
-    private val progressUpdate = Runnable { updatePracticeProgress() }
+    private val practiceDisplayUpdate = Runnable {
+        if (screen == "practice") {
+            updateMetrics()
+            updatePracticeProgress()
+        }
+    }
     private val practiceViewport by lazy { PracticeViewport(dp(48), dp(320)) }
     private val handler = Handler(Looper.getMainLooper())
     private val ticker = object : Runnable {
         override fun run() {
             if (!foreground || screen != "practice" || metrics == null) return
             updateMetrics()
-            updatePracticeProgress()
             handler.postDelayed(this, 200)
         }
     }
@@ -150,6 +154,7 @@ class MainActivity : Activity() {
             state.getInt("practiceWidth"), state.getInt("practiceHeight"))
         enterCompletes = state.getBoolean("enterCompletes", enterCompletes)
         val elapsed = state.getLong("elapsed")
+        session.setUnitPolicy(if (language == "English") EnglishTypingUnitPolicy else KoreanTypingUnitPolicy)
         session.restore(draft, elapsed, state.getBoolean("hasStarted", draft.isNotEmpty() || elapsed > 0), screen == "result")
         if (screen == "result") finalScore = FinalScore.calculate(prompt, draft, session.units, elapsed)
     }
@@ -183,6 +188,7 @@ class MainActivity : Activity() {
         historyDetailPane = null
         practiceHint = null
         practiceHeader = null
+        practiceProgress?.removeCallbacks(practiceDisplayUpdate)
         practiceProgress = null
         renderGeneration++
         saveStatus = null
@@ -289,7 +295,7 @@ class MainActivity : Activity() {
             val actions = boundedColumn(root) {
                 setPadding(dp(16), 0, dp(16), dp(8))
                 addView(LinearLayout(this@MainActivity).also {
-                    UiControls.compactActions(it, "완료", ::finishExercise, "연습 선택으로", ::showHome, dense = true)
+                    UiControls.compactActions(it, "완료", { finishExercise() }, "연습 선택으로", ::showHome, dense = true)
                 }, LinearLayout.LayoutParams(-1, -2))
             }
             ImeMotion.install(root, scroll, actions.parent as View, bottomInset = { insets ->
@@ -371,7 +377,7 @@ class MainActivity : Activity() {
         LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(UiTokens.LABEL_SECTION_GAP); bottomMargin = dp(UiTokens.LABEL_CONTENT_GAP) })
 
     private fun scoreHelpButton() = UiControls.helpButton(this, "타수 측정 기준",
-        "현재 남은 입력을 한글 자모와 영문·숫자·공백·문장부호 기준으로 환산해. 복합 모음과 겹받침은 2타, 쌍자음은 1타로 계산해. 삭제한 입력은 포함하지 않으므로 실제 키보드 터치 횟수와 다를 수 있어. 타/분은 환산 입력량을 연습 시간으로 나눈 값이야.")
+        "한국어 연습은 한글 자모를 기준으로 계산해. 복합 모음과 겹받침은 2타, 쌍자음은 1타야. 영문·숫자·공백·기본 문장부호도 각각 1타로 세어.\n\nEnglish 연습은 영문·숫자·공백·기본 문장부호를 글자당 1타로 세고, 한글 등 그 밖의 문자는 세지 않아. 줄바꿈도 타수에서 제외해.\n\n삭제한 입력은 포함하지 않으므로 실제 키보드 터치 횟수와 다를 수 있어. 타/분은 현재 입력량을 연습 시간으로 나눈 값이야.")
 
     private fun addInfo(view: TextView, compact: Boolean = false): TextView {
         content.addView(view, LinearLayout.LayoutParams(if (compact) -2 else -1, -2).apply {
@@ -384,6 +390,7 @@ class MainActivity : Activity() {
 
     private fun startExercise(reusePrompt: Boolean = false) {
         session.reset()
+        session.setUnitPolicy(if (language == "English") EnglishTypingUnitPolicy else KoreanTypingUnitPolicy)
         finalScore = null
         resultId = ""
         draft = ""
@@ -402,7 +409,7 @@ class MainActivity : Activity() {
         val input = card.editor
         editor = input
         input.completeOnEnter = enterCompletes
-        input.onSubmit = { if (foreground && screen == "practice" && editor === input) finishExercise() }
+        input.onSubmit = { if (foreground && screen == "practice" && editor === input) finishExercise(fromIme = true) }
         input.setText(draft)
         updatePracticeProgress()
         input.setSelection(selection.coerceIn(0, input.length()), selectionEnd.coerceIn(0, input.length()))
@@ -416,10 +423,9 @@ class MainActivity : Activity() {
                     val wasReady = session.state == PracticeSession.State.READY
                     session.afterChange(s, start, count)
                     if (wasReady && session.state == PracticeSession.State.RUNNING) scheduleMetrics()
-                    updateMetrics()
                     practiceProgress?.let { progress ->
-                        progress.removeCallbacks(progressUpdate)
-                        progress.postOnAnimation(progressUpdate)
+                        progress.removeCallbacks(practiceDisplayUpdate)
+                        progress.postOnAnimation(practiceDisplayUpdate)
                     }
                 }
             }
@@ -536,16 +542,19 @@ class MainActivity : Activity() {
         }
         backCallback = null
         handler.removeCallbacks(ticker)
+        practiceProgress?.removeCallbacks(practiceDisplayUpdate)
         // The shared store belongs to the application process, not this Activity.
         super.onDestroy()
     }
 
-    private fun finishExercise() {
+    private fun finishExercise(fromIme: Boolean = false) {
         val input = editor ?: return
-        if (Build.VERSION.SDK_INT >= 30) {
-            input.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-        } else {
-            input.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+        if (fromIme) {
+            if (Build.VERSION.SDK_INT >= 30) {
+                input.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+            } else {
+                input.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            }
         }
         draft = value()
         selection = input.selectionStart
@@ -618,7 +627,6 @@ class MainActivity : Activity() {
             status.setOnClickListener { if (records == null) { rememberHistoryPosition(); render() } }
             if (records != null) {
                 val recordGroup = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-                content.addView(recordGroup, LinearLayout.LayoutParams(-1, -2))
                 recentAverages(records)?.let { avg ->
                     recordGroup.addView(UiControls.info(this, "현재 조건 최근 ${avg.count}개 평균 · ${avg.perMinute}타/분 · 일치율 ${avg.accuracy}%", 14),
                         LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(UiTokens.SECTION_GAP) })
@@ -693,6 +701,7 @@ class MainActivity : Activity() {
                     rows[record.id] = button to title
                 }
                 refreshSelection()
+                content.addView(recordGroup, LinearLayout.LayoutParams(-1, -2))
                 if (records.isNotEmpty()) UiMotion.revealAsync(recordGroup)
             }
             val scroll = pageScroll
