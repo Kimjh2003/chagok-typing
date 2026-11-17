@@ -1,47 +1,35 @@
-# 0.20 module update
+# 연습 기록 저장
 
-Current boundaries and moved package paths are defined in MODULES.md at the project root. The six-module structure supersedes historical paths below.
+연습을 완료하면 결과를 기기 내부의 SQLite 데이터베이스에 자동 저장합니다. 완료하지 않고 연습 선택 화면으로 돌아간 경우에는 저장하지 않습니다. 로그인이나 네트워크 연결은 필요하지 않습니다.
 
-# Local result history — 0.16
+## 저장되는 내용
 
-Completing an exercise automatically saves an immutable result in app-private SQLite storage. Returning to selection without completion does not save an exercise. No network or account is required. Uninstalling/clearing app data removes history; existing backup policy remains disabled.
+완료 시각, 언어, 연습 종류, 제시문, 입력 내용, 환산 타수, 활성 연습 시간, 일치율, 타/분을 기록합니다. 각 결과에는 고유 UUID가 부여되어 재시도나 화면 복원 과정에서 같은 결과가 중복 저장되는 것을 방지합니다. 저장에 실패하면 결과 화면에서 다시 시도할 수 있습니다.
 
-Stored fields: completion UUID, device wall-clock timestamp, language, practice mode, prompt, entered text, text-derived units, active elapsed milliseconds, positional accuracy, and calculated units/minute. Existing scoring policy is unchanged.
+**앱을 삭제하거나 앱 데이터를 지우면 기기에 저장된 기록도 삭제됩니다.** 현재 앱 데이터 백업은 비활성화되어 있습니다. 저장은 백그라운드에서 이루어지므로 쓰기가 끝나기 전에 프로세스가 강제로 종료되면 가장 최근 기록이 저장되지 않을 수 있습니다. 저장이 완료된 기록은 앱을 다시 열어도 유지됩니다.
 
-`:app/ResultStore.kt` owns SQLite and a process-wide serial worker; callbacks return on the main thread. Input callbacks and the `:practice` and `:ui` modules do not perform persistence. SQL uses bound values. UUID primary keys make retries and restored result screens idempotent. Errors are surfaced on the result screen with a retry action. The result view itself does not trigger saves on every render.
+## 기록 살펴보기와 삭제
 
-Home → 연습 기록 shows the newest 100 saved exercises (all records remain in the database). Tap a record to expand/collapse units, elapsed time, prompt and entered text. Existing UiControls actions/info/comparison components and tokens are reused. History handles empty/loading/error states; stale callbacks are ignored after navigation. Back returns to selection.
+- 홈의 **연습 기록**에서 한국어 또는 English, 연습 종류를 선택할 수 있습니다. 언어와 종류별 조건에 맞는 최근 100개를 보여주며, 나머지 기록을 데이터베이스에서 삭제하지는 않습니다.
+- 목록에는 날짜, 연습 종류, 타/분과 일치율을 표시합니다. 기록을 누르면 제시문, 입력 내용과 자세한 결과를 확인할 수 있습니다. 넓은 화면에서는 상세 내용이 옆에 표시될 수 있습니다.
+- 기록을 길게 누르거나 선택 버튼을 누르면 여러 기록을 선택할 수 있습니다. 전체 선택은 **현재 조건으로 표시된 기록**에 적용되며, 삭제 전 선택 개수를 확인합니다. 선택한 기록은 하나의 트랜잭션으로 삭제합니다.
+- 언어별 목록 스크롤 위치와 선택 상태는 화면 복원 시 유지하도록 처리합니다. 필터를 변경하면 현재 선택은 해제됩니다.
 
-A result-screen Bundle retains its UUID and completion timestamp, allowing safe retry after activity/process recreation. SQLite writes are asynchronous: a forced process kill before the queued transaction commits can lose the newest result. App relaunch retains committed records. Old app versions have no stored history to import.
+## 코드 구성과 안전성
 
-Verification includes JVM scoring regression tests, Android lint, and device-side SQLite checks in InputInstrumentation: empty store, save/reopen with Korean text and score fields, duplicate suppression, and newest-first order, alongside existing native IME checks. Device tests use a separate randomly named database, never the real results database.
+`:history` 모듈의 `ResultStore`가 기록과 SQLite를 관리합니다. 데이터베이스 작업은 단일 백그라운드 작업자에서 순서대로 처리하고 결과는 메인 스레드에 전달합니다. 입력 콜백에서는 기록을 저장하지 않습니다. `:app`은 연습 결과를 저장 형식으로 전달하고 화면과 내비게이션을 담당합니다.
 
-Validated on Android 36.1 emulator: 11 native IME/SQLite checks passed (8 IME + 3 history); 12 JVM tests and app lint passed. ARM64 physical-device history UI remains to be checked.
+SQLite 스키마 버전 2는 기존 버전 1의 데이터와 같은 데이터베이스를 사용하며 검색용 인덱스를 추가합니다. 이미 저장된 타수와 일치율은 나중에 계산 기준이 바뀌어도 자동으로 다시 계산하지 않습니다. 따라서 계산 정책이 다른 시점의 기록은 직접 비교할 때 차이가 있을 수 있습니다.
 
+Activity가 종료되어도 프로세스 공용 저장소는 유지됩니다. 별도로 생성한 저장소를 닫으면 이미 접수된 작업을 처리한 뒤 데이터베이스를 닫고, 닫힌 뒤의 요청은 오류로 응답합니다.
 
-## 0.23 — language lists and separate record details
-- Home → history has Korean/English choice tabs using the existing shared controls. Each language queries its own latest 100 records; filtering happens in SQLite before the limit.
-- List rows contain only completion date/time, practice type, units/minute and accuracy. Prompt/input text is not loaded with the summary query.
-- Tapping a UUID opens a separate in-app detail screen loaded by ID, including full prompt/input, units and active duration. Both system Back and 기록 목록으로 return to the originating language list.
-- Each language retains its own scroll offset. Restore happens after asynchronous rows finish layout, not while loading. Language, record UUID and both list offsets survive Activity recreation via Bundle. Missing records and database read errors have explicit states; history content is read-only.
-- Same SQLite schema/database and immutable scoring policy; no record migration or deletion. All screens use shared sage controls and context-selected light/dark palette.
+## 변경 및 검증 이력
 
-0.23 validation: 15 JVM tests and release lint passed; 13 device IME/SQLite checks passed, including language-filtered summaries, exact ID lookup and missing ID. Optimized release black-box test passed on a smaller 1080x1400 emulator window: scroll list, open separate detail, return via list button with identical row bounds, switch language tabs. Existing data retained. A System UI ANR overlay was dismissed before the passing UI test; ARM64 physical review remains pending.
+- **0.16:** 자동 저장, 중복 방지, 저장 오류 재시도와 최신 기록 목록을 추가했습니다. 당시 Android 36.1 에뮬레이터에서 IME·SQLite 검사 11개, JVM 테스트 12개와 앱 lint를 통과했습니다. 해당 결과는 당시 버전에 대한 것입니다.
+- **0.20:** 저장소 구현을 독립된 `:history` 모듈로 이동했습니다. 현재 모듈 구성은 [MODULES.md](MODULES.md)를 참고해 주세요.
+- **0.23:** 언어별 최근 100개 조회와 기록 상세 화면, 목록 위치 복원을 추가했습니다. 당시 JVM 테스트 15개, 릴리즈 lint와 기기 측 검사 13개를 통과했고, 작은 에뮬레이터 화면에서 목록과 상세 이동도 확인했습니다.
+- **0.26.1:** Activity 종료 후에도 프로세스 공용 저장소가 유지되도록 하고, 저장소 종료와 대기 중인 작업의 처리 순서를 보강했습니다.
+- **0.28~0.28.1:** 언어·종류별 필터와 삭제 확인을 추가하고, 버전 1 데이터베이스를 버전 2로 업그레이드하는 테스트를 작성했습니다.
+- **다중 선택:** 표시된 기록의 복수 선택과 일괄 삭제를 추가했습니다. 2026년 10월 29일 Android 에뮬레이터 계측 검사 24개가 통과했으며, ARM64 실기기나 타사 키보드 검증을 뜻하지는 않습니다.
 
-## 0.26.1 — store lifecycle and single scene entry
-- Keep the Gemini updates (modern system bars/IME calls, predictive Back, haptics, catalog and logic refactors).
-- MainActivity no longer closes the process-wide ResultStore when finishing. Closing an Activity and relaunching in the same process retains the live shared executor and database.
-- Explicit close for independent stores is idempotent and serialized with task submission. Already accepted operations drain before SQLite closes on its worker. Requests after close report failure via the callback rather than throwing executor rejection on the caller thread. The singleton factory replaces an explicitly closed instance.
-- Non-practice destinations invoke sceneTransition exactly once, after assembly. Remove the immediately-canceling second enter animation. Practice keeps only the encouragement entry animation; native editor/card/metrics are not animated by scene entry.
-- Device regression coverage adds Activity finish/relaunch with the same shared store, save/read after relaunch, queued-write drain, double close and callback failure after close. Original input and history tests remain.
-
-## 0.28 — filter and delete
-History can filter by language and practice type before the 100-record limit, including older paragraph records. A selected record can be deleted only after an explicit confirmation. Storage remains private SQLite and existing records are unchanged. Accuracy rules for new results differ from older stored results.
-
-## 0.28.1 — upgrade regression
-An isolated device test creates a version-1 database with an existing record, upgrades through ResultStore and verifies the record and filtered query. This test requires an Android device or emulator; it has not been validated until actually run.
-
-## Multi-selection
-Long-press a row to enter selection mode, tap rows to toggle them, or select all currently displayed rows (at most 100 matching the active language and type). Confirmation shows the count; only the captured IDs are deleted together in a single transaction. Back or cancel exits selection. Changing filters clears selection; state survives Activity recreation. Selection updates do not reload the database. Device tests use isolated databases and cover duplicate/missing IDs and preservation of unselected records.
-
-2026-10-29 verification: the native instrumentation completed 24 checks on the Pixel_10_Pro x86_64 Android emulator, including the v1-to-v2 migration, isolated batch-delete checks, row long-click/selection presentation, interrupted scene cleanup and simulated native input connections. This is not a physical ARM64 device or a third-party keyboard test. The release build was compiled with R8; this emulator run used the debug build.
+테스트에서는 실제 사용자 기록 대신 별도로 생성한 데이터베이스를 사용합니다. 다양한 Android 버전과 실제 기기에서의 추가 확인은 계속 필요합니다.

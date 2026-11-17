@@ -1,92 +1,49 @@
-# 0.20 module update
+# 화면 전환과 모션
 
-Current boundaries and moved package paths are defined in MODULES.md at the project root. The six-module structure supersedes historical paths below.
+이 문서는 현재 동작과 이전 버전의 변경 이력을 설명합니다. 모션 공통 코드는 `:motion` 모듈의 `UiMotion.kt`와 `ImeMotion.kt`에 있으며, 현재 모듈 경계는 [MODULES.md](MODULES.md)를 참고해 주세요. 아래 과거 버전의 수치와 경로는 당시 기준입니다.
 
-# Motion — 0.18
+## 현재 동작
 
-Shared implementation: :ui UiMotion.kt and UiControls.kt. Native Android Views/Canvas/HWUI rendering is retained; no bundled Skia engine, native library or custom render loop is added. This follows the existing platform drawing path, not a promise of a particular GPU backend on every Android release/device.
+- 화면 진입은 460ms, 비동기 기록 표시에는 260ms를 사용합니다. 버튼을 누를 때는 140ms, 놓을 때는 300ms이며, 예측 뒤로 가기 취소는 240ms입니다. 이 동작들은 같은 완만한 곡선을 사용합니다.
+- 선택 상태 배경은 들어올 때 260ms, 나갈 때 220ms로 바뀝니다. 위 시간은 앱에서 정한 값이며 Apple이 정한 공식 수치는 아닙니다.
+- 기록 목록과 상세를 오갈 때는 방향을 알려주는 작은 가로 이동을 사용하고, RTL 언어에서는 방향을 반대로 적용합니다. 그 외 화면은 제자리에서 서서히 나타납니다. 결과 화면에 들어가기 전의 100ms 대기는 제거했습니다.
+- 연습 화면에서 입력창과 실시간 수치는 진입이나 타이핑 중에 애니메이션을 적용하지 않습니다. 격려 문구만 서서히 나타나며, 데이터 로딩·저장·버튼 동작을 애니메이션이 지연시키지 않습니다.
+- Android 11(API 30) 이상에서는 키보드의 시스템 애니메이션에 맞춰 연습 카드와 버튼을 이동합니다. Android 9·10은 기존 `adjustResize` 동작을 사용합니다. 키보드 높이를 임의로 정하지 않습니다.
+- 시스템 애니메이션이 꺼져 있으면 속성 애니메이션을 생략합니다. 배경 상태 전환은 컨트롤을 만들 때의 설정을 기준으로 합니다.
+- 기록 목록은 항목을 화면에 붙이기 전에 한 그룹으로 구성합니다. 완료 버튼은 공통 버튼 진동을 한 번 사용하고, 키보드의 완료 동작은 별도 확인 진동을 사용합니다.
 
-- Action/choice buttons and option toggle: state-driven 0.985 scale press (90ms), return to 1.0 (150ms); existing ripple retained. StateListAnimator preserves click, keyboard activation, cancellation and accessibility semantics without touch interception or delayed callbacks.
-- Button/choice surface state: 120ms enter fade. Selection state and check mark update immediately; only the drawable appearance transitions.
-- Home/result/history scene entry: 8dp translation plus alpha 0.94→1 over 180ms, decelerating cubic curve. This is a destination entry effect, not a two-scene crossfade or predictive-back preview.
-- Practice only animates the encouragement header on scene creation. Editor, prompt card, summary and pinned actions do not move/fade due to text edits or statistics updates. IME hide/show remains system-inset driven.
-- No width/height animations, full-screen blur, particles, forced software layers or permanent hardware layers. Detached scene property animations are canceled/reset. Input/scoring/persistence paths remain unchanged.
-- When system animators are disabled at view creation, custom effects are skipped. Property animators otherwise follow system duration scale. Drawable fades are configured at creation and do not independently observe later setting changes.
+이 동작은 Android 기본 View 렌더링을 이용하며 별도의 렌더링 엔진을 포함하지 않습니다. 실제 기기별 프레임 시간이나 시각적 편안함은 아직 측정하지 않았습니다.
 
-References: https://developer.android.com/reference/android/view/ViewPropertyAnimator and https://developer.android.com/topic/performance/views/hardware-accel-views . Frame time and rendering cost must still be measured on ARM64 devices; smoothness is a design target, not an established measurement.
+## 이전 변경 이력
 
-## 0.18.1 — softer motion tuning
-Supersedes the 0.18 numeric motion values: press scale 0.99 over 110ms; release 220ms; cubic (0.25, 0.1, 0.25, 1). Destination entry moves 6dp with alpha 0.96→1 over 240ms. Surface state fades enter over 180ms and exit over 120ms. Actions still execute immediately. Typing, IME/inset behavior and the scope of animated views are unchanged. Device smoothness has not been measured; this is visual timing/amplitude tuning.
+### 0.18 및 0.18.1 — 공통 모션 도입
 
-## 0.19 — synchronized IME motion
-- :ui ImeMotion.install(root, targets) synchronizes the practice scroll area (summary/card) and pinned action container with system keyboard animation on Android 11/API30+.
-- Root applies final system/IME padding through its existing inset listener. WindowInsetsAnimation.Callback applies only translationY = final padding minus current animated bottom inset; system duration/interpolation controls the motion, not an independent 240ms timer. It handles show/hide, resets on end/detach, and skips custom translation when animators are disabled.
-- No alpha on the editor, text rewriting, scoring changes, custom keyboard heights, per-frame requestLayout, or interception of keyboard control. Native visibility/insets remain authoritative, including zero-inset floating keyboards.
-- Android 9/10 keep existing adjustResize behavior without the new synchronized effect. On API30+ behavior still depends on the system/IME dispatching animation callbacks. Device frame smoothness and interrupted transitions remain to be validated physically.
-- Reference: https://developer.android.com/develop/ui/views/layout/sw-keyboard
+버튼에 누름·복귀 확대율 변화와 기존 물결 효과를 적용하고, 화면 진입과 선택 상태의 변화에도 짧은 애니메이션을 추가했습니다. 0.18.1에서는 누름 0.99배·110ms, 복귀 220ms, 진입 6dp·240ms로 조정했습니다. 입력·채점·저장 동작은 지연시키지 않았습니다. 당시 구현 위치와 수치는 현재 구성으로 대체되었습니다.
 
-## 0.19.1 — avoid clipping against the final IME boundary
-The user recording shows the moving card/actions cut off before the keyboard finishes appearing. ImeMotion now disables clipToPadding on the practice root (API30+): final IME padding still controls layout, but translated children may draw through that padding during the transition. Window bounds and the system keyboard still clip/occlude normally; internal ScrollView clipping stays enabled. This addresses the final-padding clipping mechanism without moving the editor ahead of the keyboard or guessing a keyboard height. System animation timing, final 8dp gap and all input state remain unchanged. Build/JVM/lint verification does not establish physical-device visual behavior; another device recording should confirm the improvement.
+### 0.19 및 0.19.1 — 키보드와 동기화
 
+API 30 이상에서 `WindowInsetsAnimation.Callback`으로 시스템 키보드의 표시·숨김에 맞춰 카드와 버튼을 이동하도록 했습니다. 이동 중 내용이 미리 잘리지 않도록 연습 화면 루트의 `clipToPadding`을 해제했고, 창 경계와 스크롤 영역의 잘림은 유지했습니다. Android 9·10은 기존 크기 조절 방식을 유지했습니다.
 
-## 0.24 — reduce gaze travel when dismissing the keyboard
-- On API30+, remember only a docked IME bottom actually observed in this window. When hidden, reserve the former IME area minus 48dp, keeping the prompt/editor and action row together near their prior position. Keep the existing 8dp gap within the group; do not move actions independently.
-- Clamp the retained reserve to leave at least 320dp of vertical window space (minus system top inset). Narrow/short windows retain scrolling and may move further to preserve usable space. Reset old IME memory on actual window geometry changes; floating IME with zero bottom inset clears docked reserve.
-- The motion module accepts an optional effective-bottom provider so animation progress uses the same reserved-space policy as final layout. This avoids a jump at animation end. No per-frame layout or text mutations are added.
-- Hide the small upper hint while the IME is visible; when hidden show: 입력칸을 누르면 이어서 연습할 수 있어. Keep the existing encouragement. No new cards/decorations.
-- Persist observed keyboard geometry with other practice Bundle state. API28/29 retain native adjustResize and omit the hint; the new limited-travel behavior requires API30 inset visibility/animation.
-- Timing continues while practice remains visible with keyboard hidden, as before. Back still dismisses keyboard first, then returns to selection. Palette, storage and scoring are unchanged.
+### 0.24 — 키보드를 닫을 때 이동 거리 완화
 
-0.24 verification: 19 JVM tests and app/UI/motion release lint passed. R8 release black-box test on Android36.1 with real Gboard verified keyboard appearance, first Back showing the resume hint while preserving text, and editor bounds moving downward no more than48dp (+2px tolerance). Completion/save/history navigation also passed. An emulator System UI ANR overlay was dismissed before the passing run. API28/29 and physical ARM64 review remain pending.
+API 30 이상에서 실제로 관찰한 고정 키보드 영역을 기준으로, 키보드를 닫은 뒤에도 일부 공간을 남겨 카드와 버튼이 너무 멀리 이동하지 않도록 했습니다. 최소 사용 공간은 320dp로 제한하며, 창 크기가 바뀌거나 떠 있는 키보드를 사용하면 기존 관찰값을 초기화합니다. 키보드가 닫힌 동안 연습 시간은 계속 측정합니다.
 
-## 0.26.1 — store lifecycle and single scene entry
-- Keep the Gemini updates (modern system bars/IME calls, predictive Back, haptics, catalog and logic refactors).
-- MainActivity no longer closes the process-wide ResultStore when finishing. Closing an Activity and relaunching in the same process retains the live shared executor and database.
-- Explicit close for independent stores is idempotent and serialized with task submission. Already accepted operations drain before SQLite closes on its worker. Requests after close report failure via the callback rather than throwing executor rejection on the caller thread. The singleton factory replaces an explicitly closed instance.
-- Non-practice destinations invoke sceneTransition exactly once, after assembly. Remove the immediately-canceling second enter animation. Practice keeps only the encouragement entry animation; native editor/card/metrics are not animated by scene entry.
-- Device regression coverage adds Activity finish/relaunch with the same shared store, save/read after relaunch, queued-write drain, double close and callback failure after close. Original input and history tests remain.
+당시 JVM 테스트 19개와 릴리즈 검사가 통과했고, Android 36.1 에뮬레이터의 Gboard로 키보드·뒤로 가기·결과 저장 흐름을 확인했습니다. Android 9·10과 ARM64 실기기는 당시 확인하지 못했습니다.
 
-## 0.27.7 — gentler motion
-Shared press scales to 0.99 over 140ms and releases over 240ms; entry transitions run 300ms with a more gradual easing curve. Choice fades run 220/180ms. Actions are not delayed; text and metrics stay unanimated. IME motion continues to follow system insets and timing. System animation-off is respected.
+### 0.26.1 — 저장소 생명주기와 화면 진입
 
-## 0.27.8 — contextual scene entry
-Non-practice scenes use a short in-place fade; opening history detail adds 8dp logical horizontal movement and returning reverses it with RTL support. Same-screen refreshes do not animate. Practice encouragement fades in place; editor remains unanimated. IME motion follows the system. This is an incoming fade, not a crossfade or shared-element transition; Android system back handling remains unchanged.
+Activity가 종료될 때 프로세스 공용 `ResultStore`를 닫지 않도록 수정했습니다. 별도 저장소를 닫을 때는 이미 접수된 작업을 완료한 다음 데이터베이스를 닫으며, 닫힌 뒤 요청은 오류 콜백으로 전달합니다. 일반 화면의 중복 진입 효과를 제거하고 연습 화면은 격려 문구 중심으로 모션을 적용했습니다.
 
-## 0.27.9 — relaxed scene timing
-Scene entry uses 380ms and the One UI basic cubic-bezier (0.22, 0.25, 0, 1), with initial opacity 0.84. The movement remains contextual; this is still an incoming fade, not a crossfade. Button timing, input and system-controlled IME motion are unchanged. Motion remains optional through the system animation setting.
+### 0.27.7~0.27.12 — 전환 조정
 
-## 0.27.10 — damped scene easing
-Scene entry uses a normalized critically damped timing curve, inspired by spring settling without overshoot; this is a fixed-duration interpolator, not a physical SpringAnimation or iOS motion implementation. Home/history and history/detail entries use opposite 8dp horizontal offsets for forward/back with RTL support. Other scenes fade in place; practice input remains unanimated, and IME timing follows system insets. Actions remain immediate and system animation settings are respected.
+버튼과 화면 진입 속도를 단계적으로 조절하고, 기록 상세 진입·복귀에 방향성을 추가했습니다. 화면 진입 곡선에는 튀어 오르지 않고 감쇠하는 느낌을 적용했습니다. 0.27.11에서는 연습 화면에도 진입 효과가 있었고, 0.27.12에서는 키보드 요청 및 결과 표시에 100ms 간격을 두었습니다. 이 동작들은 위의 현재 규칙으로 대체되었습니다.
 
-## 0.27.11 — practice entry continuity
-The practice content column uses the same in-place 380ms incoming fade when navigating from home or a result, including next practice. Its layout and IME-driven translation are unchanged; entry animation does not gate focus, input, actions or keyboard. Same-screen rerenders do not animate. The keyboard and action row continue to follow system insets. System animation-off remains supported.
+### 0.28.1~0.30.2 — 레이어와 표시 시점 정리
 
-## 0.27.12 — staggered practice entry and completion
-For new practice, focus is immediate and the IME show request is delayed 100ms when animations are enabled. After completion, scoring and save are immediate; result content starts fading in after 100ms while the IME begins hiding. The actual IME duration is system-controlled; these are overlapping staged motions, not strict sequencing. System animation-off removes both delays. Delayed requests verify the current editor and foreground state. Real-device testing across keyboards remains necessary.
+강제로 지정하던 하드웨어 레이어를 제거하고, 화면에서 분리된 버튼의 누름 상태를 초기화하도록 했습니다. 비동기로 불러온 기록에는 부드러운 표시 효과를 추가했습니다. 0.29.3에서는 화면 진입을 520ms로 조정했으며, 0.30.2에서는 키보드를 고정 100ms 뒤가 아니라 다음 화면 프레임에 요청하도록 변경했습니다. 현재 시간과 표시 범위는 위의 현재 동작을 따릅니다.
 
-## 0.28.1 — layer handling
-Remove manually forced hardware layers from IME and scene transitions. Animation properties and timings remain; hardware rendering remains enabled normally. This avoids leaving a forced layer after cancellation and avoids forcing a cached layer on a changing editor. Performance difference has not been benchmarked.
+## 참고 자료
 
-## Press state cleanup
-The shared press effect resets scale when a control detaches, and clears its state animator and scale if motion is disabled when configured. System duration scaling still controls running property animations. Scene and IME effects keep their existing cancellation and inset behavior; device verification of interruptions and changes to animation settings is still needed.
-
-## Asynchronous history content
-History list results and the wide history detail pane reveal each loaded group with a single 180ms alpha transition from 0.88 to 1. Data, actions, and scroll restoration are not delayed. Empty and error messages update immediately. Animation-disabled settings skip the effect; detaching the group resets its properties. Typing, scoring, saving, and system IME timing are unaffected. Narrow history detail retains its existing scene transition. Device smoothness is not yet measured.
-
-## 0.29.3 — calmer transitions
-Scene entries take 520ms with a gentler normalized damped curve; async history content fades in over 260ms. Button press stays at 140ms for immediate feedback, release takes 300ms, and surface fades take 260/220ms. Predictive Back cancellation returns over 220ms. Existing 100ms IME sequencing and the system-controlled keyboard animation remain unchanged. Actions and data are not deferred by the longer effects; disabled system animation still skips custom effects. Device feel and frame timing require physical verification.
-
-## 0.30.2 — keyboard request aligned to a frame
-On entry to practice, request the IME on the next animation frame instead of imposing a fixed 100ms delay. When animations are disabled and when restoring a session, post the request normally. The existing editor identity, foreground and screen guards remain. The keyboard and system decide when the IME actually appears, and the result-entry stagger is unchanged. Real-device timing and motion continuity remain unmeasured.
-
-## Unified motion tuning
-
-Scene entry (460ms), async history reveal (260ms), button press/release (140/300ms), and predictive-back cancellation (240ms) share the same gentle cubic easing. Surface fades remain 260/220ms. These durations are design choices, not Apple's published timings. Contextual history navigation retains its small RTL-aware horizontal offset; other scenes fade in place. Results no longer wait 100ms before appearing. Actions, loading, and persistence are not delayed.
-
-The practice editor and metrics do not animate on entry or while typing. Only its encouragement header uses the scene fade; keyboard and input-card movement continue to follow system IME insets and timing. Animation-disabled settings skip property animations; drawable state fade settings are evaluated when controls are created. This does not establish frame performance or visual comfort on physical devices.
-
-Reference: https://developer.apple.com/design/human-interface-guidelines/motion
-
-## Transition flow cleanup
-
-History rows are assembled as one detached group before attaching it to the visible list; data loading and scroll restoration remain asynchronous and unchanged. The completion button uses the shared button haptic once, while completion through the IME retains its own confirmation feedback. Navigation, scoring, saving and IME timing are not delayed. Device frame-time improvement has not been measured.
+- [Android ViewPropertyAnimator](https://developer.android.com/reference/android/view/ViewPropertyAnimator)
+- [Android 키보드 애니메이션](https://developer.android.com/develop/ui/views/layout/sw-keyboard)
+- [Apple 모션 디자인 가이드](https://developer.apple.com/design/human-interface-guidelines/motion)
