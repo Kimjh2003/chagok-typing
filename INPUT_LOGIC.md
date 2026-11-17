@@ -4,7 +4,7 @@
 
 0.10 구현은 전부 Kotlin으로 이관했습니다. 여기서 정의한 작업 경로·계산 정책은 유지합니다. 구현은 app/src/main/kotlin/dev/typing/practice/, 검증은 app/src/test/kotlin/dev/typing/practice/LogicTest.kt에 있습니다. 예문 배열은 PromptRepository에서 한 번만 초기화합니다. Java 0.9에서 저장한 결과 해시와 비교하는 회귀 테스트를 추가했습니다.
 
-목표: 화면 디자인과 계산 정책을 유지하면서 입력 경로 밖의 반복 작업을 줄이고, 입력·시간·표시·완료 처리를 구분합니다. 0.8에서도 변경 범위 타수 집계는 이미 적용돼 있었으며 이번 변경에서 새로 도입한 것처럼 주장하지 않습니다.
+목표: 화면 디자인과 계산 정책을 유지하면서 입력 경로 밖의 반복 동작을 줄이고, 입력·시간·표시·완료 처리를 구분합니다. 0.8에서도 변경 범위 타수 집계는 이미 적용돼 있었으며 이번 변경에서 새로 도입한 것처럼 주장하지 않습니다.
 
 ## 실행 경로
 
@@ -42,7 +42,7 @@
 
 ## 0.8 대비 줄인 작업
 
-- 홈·결과·백그라운드에서는 200ms 표시 작업을 예약하지 않습니다. 화면 전환/일시 정지 때 예약을 제거합니다.
+- 홈·결과·백그라운드에서는 200ms 표시 동작을 예약하지 않습니다. 화면 전환/일시 정지 때 예약을 제거합니다.
 - 이전에는 200ms마다 `String.format`으로 전체 문자열을 만든 뒤 비교했습니다. 이제 표시할 초/타수/반올림 속도가 달라진 때만 새 문자열을 구성합니다. 언어/유형 접두어도 화면 생성 때 한 번 만든다.
 - 완료 화면에서 전체 입력의 타수를 다시 세지 않고 집계된 값을 사용합니다. 완료 결과는 한 번 생성하고 재사용합니다. 프로세스 복원 시에는 저장된 입력으로 타수를 한 번 재구성합니다.
 - 입력을 모두 지웠더라도 ‘연습을 시작했다’는 상태는 별도로 유지합니다. 빈 입력 상태로 일시 정지/복귀해도 시간을 정상 재개합니다.
@@ -70,24 +70,24 @@
 
 빌드와 Lint는 앱/UI 모듈 연결을 확인합니다. 실제 ARM64 기기의 터치→표시 지연·GC·프레임 성능 개선 수치는 아직 측정하지 않았습니다. 구조상 제거한 작업과 체감 속도 개선의 실측은 구분합니다.
 
-## 0.17 — simplify changed-range unit counting
-- Keep beforeChange/afterChange incremental counting, native IME composition, deferred cached metrics, completion-only scoring and background result storage unchanged.
-- TypingUnits reads one UTF-16 code unit at a time. Every supported counted character is BMP; surrogate halves and supplementary characters contribute zero. This removes code-point decoding and prevents a high surrogate at the range boundary from reading the following code unit outside the changed range.
-- ASCII has a direct branch. Compatibility consonant clusters use numeric branches instead of a string search. No per-character collections, snapshots or lookup-table initialization are added.
-- Verify every BMP code unit against prior rules, split-surrogate edits, strict range access, existing all-Hangul/NFD and random edits, and the Java 0.9 golden fixture.
-- This reduces operations structurally, not a measured claim of lower device latency. The 200ms cached statistics formatter and lifecycle routing are retained; changing visible cadence or adding native code requires measurement.
+## 0.17 — 변경 범위 타수 계산 단순화
+- beforeChange/afterChange 증분 계산, 기본 IME 구성, 지연된 캐시 측정항목, 완료 전용 채점 및 백그라운드 결과 저장을 변경하지 않고 유지하세요.
+- TypingUnits는 한 번에 하나의 UTF-16 코드 단위를 읽습니다. 지원되는 모든 계산 문자는 BMP입니다. 대리 반쪽과 보조 문자는 0을 기여합니다. 이는 코드 포인트 디코딩을 제거하고 범위 경계의 상위 서로게이트가 변경된 범위 밖의 다음 코드 단위를 읽는 것을 방지합니다.
+- ASCII에는 직접 분기가 있습니다. 호환성 자음 클러스터는 문자열 검색 대신 숫자 분기를 사용합니다. 문자별 컬렉션, 스냅샷 또는 조회 테이블 초기화가 추가되지 않습니다.
+- 이전 규칙, 분할 대리 편집, 엄격한 범위 액세스, 기존 전체 한글/NFD 및 무작위 편집, Java 0.9 골든 픽스처에 대해 모든 BMP 코드 단위를 확인합니다.
+- 이는 구조적으로 동작을 감소시키는 것이지 장치 대기 시간이 더 낮다는 측정된 주장은 아닙니다. 200ms 캐시된 통계 포맷터 및 수명 주기 라우팅이 유지됩니다. 눈에 보이는 케이던스를 변경하거나 기본 코드를 추가하려면 측정이 필요합니다.
 
-## 0.27.4 — current-text unit validation
-Composition replacement, correction, deletion, paste, decomposed Hangul and completion are checked against explicit expected unit totals. The existing arithmetic and weighting policy are unchanged. Result screens call the quantity 환산 입력량; this is not a measurement of keyboard taps. Device IME behavior and performance remain to be measured.
+## 0.27.4 — 현재 입력 기준 타수 검증
+구성 교체, 수정, 삭제, 붙여넣기, 분해된 한글 및 완성은 명시적인 예상 단위 합계와 비교하여 확인됩니다. 기존 산술 및 가중치 정책은 변경되지 않습니다. 결과 화면에서는 수량 환산 입력량를 호출합니다. 이것은 키보드 탭을 측정한 것이 아닙니다. 장치 IME 동작 및 성능은 아직 측정되지 않았습니다.
 
-## 0.27.6 — idle metrics scheduling
-While the practice session is READY, no periodic metrics callback is scheduled. The first input transition to RUNNING schedules the existing 200ms ticker; pause, resume and screen teardown retain existing lifecycle controls. This removes idle wakeups; no latency measurement or database speedup is claimed.
+## 0.27.6 — 대기 중 상태 갱신 예약
+연습 세션이 READY인 동안에는 정기적인 메트릭 콜백이 예약되지 않습니다. RUNNING로의 첫 번째 입력 전환은 기존 200ms 티커를 예약합니다. 일시중지, 재개 및 화면 분해는 기존 수명주기 제어를 유지합니다. 이렇게 하면 유휴 깨우기가 제거됩니다. 대기 시간 측정이나 데이터베이스 속도 향상은 주장되지 않습니다.
 
-## 0.28 — completion accuracy
-New results use NFC-normalized Unicode code point Levenshtein distance divided by the longer text length (empty input yields zero). Over one million comparison cells, a positional fallback bounds completion work; this can score large pastes differently. Existing saved accuracy is never recalculated. Text-derived typing units and input callbacks remain unchanged.
-# Language-specific typing units
+## 0.28 — 완료 시 일치율 계산
+새로운 결과는 NFC 정규화된 유니코드 코드 포인트 Levenshtein 거리를 더 긴 텍스트 길이로 나눈 값을 사용합니다(빈 입력은 0을 생성함). 백만 개 이상의 비교 셀, 위치 폴백 경계 완료 작업; 이것은 큰 페이스트의 점수를 다르게 매길 수 있습니다. 기존에 저장된 정확도는 다시 계산되지 않습니다. 텍스트 기반 입력 단위 및 입력 콜백은 변경되지 않습니다.
+# 언어별 입력 단위
 
 `TypingUnitPolicy` in `:practice` provides additive changed-range counts, selected when starting or restoring a session. Korean uses the existing jamo-weighted `TypingUnits` policy; English counts printable ASCII U+0020–U+007E as one unit each and excludes other characters and newlines. Both report units per active minute, not physical keystrokes. A policy cannot change mid-session. Existing saved records retain their original stored values; future English records may differ for mixed Korean/English input. This does not migrate or recalculate history.
 
-After an input edit the session still updates synchronously using only changed ranges. The app coalesces metric and progress display updates into a single next-frame callback, canceling a pending callback when the practice view is replaced or destroyed. The 200ms timer updates elapsed metrics only; input-length progress changes only with edits. Completion reads the session directly and does not depend on the pending display update. Device latency or frame-time improvements have not been measured.
+입력 편집 후에도 세션은 변경된 범위만 사용하여 동기적으로 업데이트됩니다. 앱은 측정항목 및 진행률 표시 업데이트를 단일 다음 프레임 콜백으로 통합하여 연습 보기가 교체되거나 삭제될 때 보류 중인 콜백을 취소합니다. 200ms 타이머는 경과된 측정항목만 업데이트합니다. 입력 길이 진행은 편집을 통해서만 변경됩니다. 완료는 세션을 직접 읽으며 보류 중인 디스플레이 업데이트에 의존하지 않습니다. 장치 대기 시간 또는 프레임 시간 개선은 측정되지 않았습니다.
 

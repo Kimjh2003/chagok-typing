@@ -26,7 +26,7 @@
 SubmitEditText는 Android EditText의 하위 클래스다. 기본 텍스트 편집·표시·조합 처리를 유지합니다.
 
 - IME_ACTION_DONE, 일반 물리 Enter/숫자패드 Enter, 단독 줄바꿈 commitText를 처리합니다.
-- Android 33 이상 commitText의 TextAttribute 오버로드도 지원합니다. 구형 API 경로는 별도 기본 래퍼를 사용합니다.
+- 안드로이드 33 이상 commitText의 TextAttribute 오버로드도 지원합니다. 구형 API 경로는 별도 기본 래퍼를 사용합니다.
 - 완료 시 finishComposingText로 현재 표시된 조합을 유지하고, 현재 IME 콜백이 반환된 뒤 한 번만 완료 콜백을 전달합니다.
 - 연속 알림은 예약 중에 합쳐 중복 완료를 방지하고, 입력창이 제거되면 예약을 취소합니다. 앱도 현재 화면/입력창을 확인합니다.
 - 줄바꿈이 포함된 일반 문자열/여러 줄 붙여넣기는 엔터 이벤트로 간주하지 않습니다. 단독 줄바꿈만 전달되면 실제 Enter와 구분할 수 없으므로 켜짐 상태에서는 완료로 취급합니다.
@@ -52,22 +52,22 @@ adb shell am instrument -w dev.typing.practice.test/dev.typing.practice.InputIns
 
 참고: [Android InputConnection](https://developer.android.com/reference/android/view/inputmethod/InputConnection), [Editor action listener](https://developer.android.com/reference/android/widget/TextView.OnEditorActionListener).
 
-## 0.13 — practice actions within reach
-- Current Korean/English prompts, including paragraphs, contain no explicit newlines; visual wrapping does not require Enter.
-- Keep the persisted Enter-to-complete option and native IME routing from 0.12 unchanged.
-- Override 0.12 action placement: remove the input-header completion button and the return button above the summary.
-- Pin equal-width 완료 / 연습 선택으로 actions below the scroll area, immediately above the actual IME/system inset with an 8dp bottom gap. Each action has a minimum height of 48dp.
-- Keep summary and prompt/input card bottom-aligned just above the action row, with 8dp spacing. Long content scrolls independently of the actions.
+## 0.13 — 손이 닿기 쉬운 연습 버튼
+- 단락을 포함한 현재 한국어/영어 제시문에는 명시적인 개행 문자가 포함되어 있지 않습니다. 시각적 줄 바꿈에는 Enter가 필요하지 않습니다.
+- 지속적인 Enter-to-complete 옵션과 기본 IME 라우팅을 0.12에서 변경하지 않고 유지하세요.
+- 0.12 작업 배치 재정의: 입력 헤더 완료 버튼과 요약 위의 반환 버튼을 제거합니다.
+- 스크롤 영역 아래, 8dp 하단 간격이 있는 실제 IME/시스템 삽입 바로 위에 동일한 너비의 완료 / 연습 선택으로 동작을 고정합니다. 각 작업의 최소 높이는 48dp입니다.
+- 요약 및 제시문/입력 카드를 버튼 행 바로 위에 8dp 간격으로 아래쪽 정렬합니다. 긴 콘텐츠는 작업과 관계없이 스크롤됩니다.
 
-## 0.14 — reachable Back and quieter buttons
-- Back from practice or results returns to selection; home retains system exit behavior.
+## 0.14 — 뒤로 가기와 차분한 버튼
+- 연습이나 결과로 돌아가서 선택으로 돌아갑니다. home은 시스템 종료 동작을 유지합니다.
 - Android 13+: register OnBackInvokedCallback at PRIORITY_OVERLAY only outside home so Back returns to selection even with the IME open. Android 9–12: tracked, uncanceled pre-IME Back on the editor routes to the same app callback; legacy Activity Back handles other focus states.
-- Returning to selection abandons the current exercise, exactly like the existing selection button; it does not submit a score.
-- Shared home/result actions and choices: minimum 48dp, 15sp, 8dp vertical padding. Practice actions: minimum 48dp, 14sp, 8dp padding. Heights remain flexible for larger fonts and wrapped labels.
-- Keep the 0.13 pinned two-action row and existing Enter completion option.
+- 선택 항목으로 돌아가면 기존 선택 버튼과 마찬가지로 현재 연습이 취소됩니다. 점수를 제출하지 않습니다.
+- 공유 홈/결과 작업 및 선택: 최소 48dp, 15sp, 8dp 수직 패딩. 연습 작업: 최소 48dp, 14sp, 8dp 패딩. 더 큰 글꼴과 래핑된 라벨의 경우 높이는 유연하게 유지됩니다.
+- 0.13 고정된 2액션 행과 기존 입력 완료 옵션을 유지합니다.
 
-## 0.16.1 — dismiss keyboard before leaving practice
+## 0.16.1 — 연습 종료 전 키보드 닫기
 - Overrides 0.14's immediate return with the IME open: first Back dismisses the system IME, keeping the same practice view, entered text, selection and session. Back after the keyboard is hidden returns to selection.
 - Android 13+ uses PRIORITY_DEFAULT so the IME can consume Back first. Android 9–12 uses native editor/IME dispatch without a custom pre-IME interceptor; Activity Back handles navigation after IME dismissal.
-- The existing bottom action row follows system/IME insets. Dismissing the IME moves 완료 / 연습 선택으로 to the screen bottom without re-rendering the practice scene. The explicit selection button still returns directly to selection.
-- Result/history Back behavior and local result storage are unchanged. Timing continues while practice stays visible with the keyboard hidden.
+- 하단 버튼은 시스템·키보드 인셋을 따릅니다. 키보드를 닫으면 연습 화면을 다시 만들지 않고 완료·연습 선택으로 버튼이 화면 아래로 이동합니다. 연습 선택 버튼은 즉시 선택 화면으로 돌아갑니다.
+- 결과/기록 뒤로 동작 및 로컬 결과 저장은 변경되지 않습니다. 키보드가 숨겨진 상태에서 연습이 계속 표시되는 동안 타이밍이 계속 유지됩니다.

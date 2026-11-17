@@ -2,7 +2,7 @@
 
 0.11 후속 안내: 이 문서의 0.10 경로 기록 이후 연습 엔진 4개 파일은 :practice 모듈로 이동했습니다. 현재 경로와 테스트 구성은 ARCHITECTURE.md 및 practice/README.md 참조. Kotlin 전환 때 확보한 Java 기준 해시는 유지합니다.
 
-앱, 공통 UI, 회귀 검사, Gradle 스크립트를 Kotlin으로 전환했습니다. Compose/커스텀 렌더러로 UI 기술을 바꾼 작업은 아닙니다. 플랫폼 Views와 EditText, `:app → :ui` 의존성을 유지합니다.
+앱, 공통 UI, 회귀 검사, Gradle 스크립트를 Kotlin으로 전환했습니다. Compose/커스텀 렌더러로 UI 기술을 바꾼 동작은 아닙니다. 플랫폼 Views와 EditText, `:app → :ui` 의존성을 유지합니다.
 
 ## 구조
 
@@ -33,7 +33,7 @@ Gradle은 settings.gradle.kts, build.gradle.kts, app/build.gradle.kts, ui/build.
 - 작은 버튼 두 개를 만들 때 임시 문구/콜백 배열 대신 공통 생성 함수를 사용합니다.
 - 통계 표시 문자열 캐시, 완료 결과 캐시, 전경 연습 화면에서만 통계를 갱신하는 정책을 유지합니다.
 
-Kotlin의 소스 길이와 기계 명령어 수는 같지 않습니다. 이번 작업은 중복/불필요한 준비 작업을 정리한 것이며, 언어 교체만으로 더 빨라졌다고 주장하지 않습니다.
+Kotlin의 소스 길이와 기계 명령어 수는 같지 않습니다. 이번 동작은 중복/불필요한 준비 동작을 정리한 것이며, 언어 교체만으로 더 빨라졌다고 주장하지 않습니다.
 
 ## 회귀 검증
 

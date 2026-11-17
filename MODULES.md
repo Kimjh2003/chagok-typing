@@ -1,42 +1,23 @@
-# Module boundaries — 0.20
+# 모듈 구성
 
-This version supersedes the earlier three-module structure. Behavior and scoring are unchanged.
+차곡은 다음 여섯 개의 앱 모듈과 별도의 테스트 전용 모듈로 구성됩니다.
 
-| Module | Responsibility | Project dependencies |
-|---|---|---|
-| :app | Scene assembly, navigation, native IME/lifecycle binding, option preferences, metrics formatting, mapping FinalScore to SavedResult | :ui, :motion, :practice, :history |
-| :ui | Tokens, reusable native controls, prompt/editor card and Enter routing view | :common, :motion |
-| :motion | UiMotion and ImeMotion; native property/insets animation only | :common |
-| :common | Density conversion shared by UI and motion; no theme, app state or feature logic | none |
-| :practice | Pure Kotlin/JVM session, text units, final score, prompt repository | none |
-| :history | SavedResult DTO and private SQLite store, serial background I/O and main-thread callbacks | none |
+| 모듈 | 역할 | 프로젝트 의존성 |
+| --- | --- | --- |
+| `:app` | 화면 조립, 내비게이션, IME·생명주기 연결, 설정과 표시 문구 | `:ui`, `:motion`, `:practice`, `:history` |
+| `:ui` | 디자인 토큰, 공통 컨트롤, 제시문·입력 카드와 엔터 처리 | `:common`, `:motion` |
+| `:motion` | Android 기본 속성과 인셋을 이용한 화면·키보드 모션 | `:common` |
+| `:common` | UI와 모션이 공통으로 쓰는 화면 밀도 변환 | 없음 |
+| `:practice` | 순수 Kotlin/JVM 연습 상태, 언어별 타수, 결과 계산과 제시문 | 없음 |
+| `:history` | 저장할 결과와 SQLite 저장소, 단일 백그라운드 작업자 | 없음 |
+| `:smoke` | R8 릴리즈를 외부에서 확인하는 별도 테스트 APK | 앱 모듈 의존성 없음 |
 
-No feature depends on :app. :practice is still Android-free. :history has no UI/motion/practice dependency: it stores completed SavedResult values supplied by the app; it never calculates scores. :motion does not import :ui, preventing a dependency cycle. Common is deliberately small; feature-specific code stays out of it.
+기능 모듈은 `:app`에 역으로 의존하지 않습니다. `:practice`는 Android에 의존하지 않으며, `:history`는 UI나 채점 로직을 참조하지 않고 앱이 전달한 결과만 저장합니다. `:motion`이 `:ui`를 참조하지 않아 순환 의존성을 피합니다.
 
-Moved packages:
-- dev.typing.ui.UiMotion / ImeMotion → dev.typing.motion
-- dev.typing.practice.ResultStore / SavedResult → dev.typing.history
-- shared density conversion → dev.typing.common.Dimensions (UiControls.dp remains a delegating facade)
+입력 언어에 맞는 타수 정책은 연습 시작이나 복원 시 선택합니다. 기록 선택과 필터, 삭제 확인과 화면 이동은 `:app`이 담당하며, 선택된 기록 삭제는 `:history`에서 하나의 트랜잭션으로 처리합니다. 연습 완료 시 비교 동작은 `:practice`에서 수행하고 입력 중에는 변경된 범위만 집계합니다.
 
-At 0.20 history used the same application context, results.db filename, schema version 1, column names, UUID keys and ordering. Later 0.28 upgrades the schema to version 2 by adding an index; it retains the same records, database name and application ID.
+## 이력과 검증
 
-Screen builders, MetricsFormatter and IME/lifecycle orchestration remain in :app. They are app-specific composition, not generic common utilities. Native editor Enter routing stays in :ui and emits a callback; it has no scoring/navigation dependency. Creating a module for every button or callback is intentionally avoided.
+0.20에서 기존 세 모듈 구성을 여섯 모듈로 확장했고, 0.21에서 별도의 `:smoke` 테스트 APK를 추가했습니다. 기록 데이터베이스는 이름과 기존 기록을 유지하며 0.28에서 검색 인덱스를 추가해 스키마 버전을 2로 올렸습니다. 과거 패키지 `dev.typing.ui.UiMotion`과 `ImeMotion`은 `dev.typing.motion`으로, `dev.typing.practice.ResultStore`와 `SavedResult`는 `dev.typing.history`로 이동했습니다.
 
-Build all Android lint checks with `gradlew lintDebug`; compile app and device tests with `:app:assembleDebug :app:assembleDebugAndroidTest`; run `:practice:test :app:testDebugUnitTest :ui:testDebugUnitTest`. Existing device history tests now use SavedResult, exercising the new storage boundary when run. Old architectural notes in other documents describe earlier versions; this document is authoritative for 0.20.
-
-0.21 adds :smoke as a separate test-only Android APK. The production app still uses the same six-module graph; :smoke has no project dependencies and is never packaged into :app.
-
-## 0.27.5 — recent feature placement
-Shared section tags, labeled information cards, record controls and dark palettes belong to :ui. :app supplies screen content, navigation, history mapping and lifecycle; :practice owns prompts, text-derived units, session and JVM regression tests; :history owns saved results and storage; :motion owns effects. The UI module knows no score or database model. Existing signing and database remain unchanged.
-
-## 0.27.13 — motion policy and computation
-:motion owns the shared stagger duration and precomputed easing normalization. :app owns lifecycle, IME requests and navigation. R8 remains enabled with optimized defaults; no speculative unsafe rules added. Runtime benefit is not benchmarked.
-
-## 0.27.27 — adaptive layout ownership
-:ui owns AdaptiveLayoutPolicy and practice card layout. :app owns window/configuration observation, history selection/navigation and screen assembly; :history remains storage-only. Width thresholds are current heuristics, not fold/hinge detection. Tests cover threshold boundaries; device validation remains necessary.
-
-## Recent history selection and stability changes
-- :app owns selection state, filtering, confirmation, lifecycle and navigation. A single toggle updates only its row and selection controls; selecting all or changing modes updates visible rows.
-- :ui owns reusable row styling and selection feedback. :history deletes a snapshot of IDs atomically on its worker using a reused bound statement; no feature or UI dependency is added.
-- :practice owns bounded completion scoring and shared-prefix/suffix trimming. :motion owns cancellation of interrupted scene transitions. No change is made to the keyboard input hot path.
-- These changes do not change the SQLite schema or rewrite old scores. Performance improvement is not benchmarked.
+화면 폭을 이용한 적응형 배치는 기기의 실제 힌지 위치를 감지하는 기능이 아닙니다. 기기별 성능 향상과 폴더블 동작은 별도 실기기 검증이 필요합니다. 검사 명령과 개발 환경은 [README.md](README.md)를 참고해 주세요.

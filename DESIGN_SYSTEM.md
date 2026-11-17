@@ -179,7 +179,7 @@
 - 문자 입력에 페이드/확대/애니메이션을 넣지 않습니다. 전환 모션 추가 시 짧고 중단 가능하게 하고 시스템 모션 설정을 존중합니다. 현재 커스텀 전환 모션은 없음.
 - 상태별 배경은 생성 때 준비하고 포커스 변화는 drawable state로 처리. 입력마다 배경/카드/전체 화면을 재생성하지 않습니다.
 - 입력 이벤트는 변경 범위 집계만 수행. 통계 표시는 200ms 주기, 같은 표시 문자열이면 setText 생략.
-- 비동기 계산·디스크 작업은 입력 반영을 막지 않으며 실제 성능은 릴리스 빌드로 검증합니다.
+- 비동기 계산·디스크 동작은 입력 반영을 막지 않으며 실제 성능은 릴리스 빌드로 검증합니다.
 
 ## 8. 구현 범위와 확인 기준
 
@@ -205,131 +205,131 @@
 - 에뮬레이터 부팅/서비스 지연으로 이번 0.5 화면의 실행 QA는 완료하지 못했습니다. 스크린샷은 이전 0.4 실기기 피드백이며 0.5 결과 이미지로 사용하지 않습니다.
 - 다음 실기기 확인: 키보드가 열린 상태에서 입력창/커서와 완료 버튼 접근 → 문단 스크롤 → 글꼴 확대/가로 창 → 한글 조합/선택/삭제 → 결과 화면. 다크 테마와 힌지 회피는 미구현으로 따로 취급합니다.
 
-## 0.13 — practice actions within reach
-- Current Korean/English prompts, including paragraphs, contain no explicit newlines; visual wrapping does not require Enter.
-- Keep the persisted Enter-to-complete option and native IME routing from 0.12 unchanged.
-- Override 0.12 action placement: remove the input-header completion button and the return button above the summary.
-- Pin equal-width 완료 / 연습 선택으로 actions below the scroll area, immediately above the actual IME/system inset with an 8dp bottom gap. Each action has a minimum height of 48dp.
-- Keep summary and prompt/input card bottom-aligned just above the action row, with 8dp spacing. Long content scrolls independently of the actions.
+## 0.13 — 손이 닿기 쉬운 연습 버튼
+- 단락을 포함한 현재 한국어/영어 제시문에는 명시적인 개행 문자가 포함되어 있지 않습니다. 시각적 줄 바꿈에는 Enter가 필요하지 않습니다.
+- 지속적인 Enter-to-complete 옵션과 기본 IME 라우팅을 0.12에서 변경하지 않고 유지하세요.
+- 0.12 작업 배치 재정의: 입력 헤더 완료 버튼과 요약 위의 반환 버튼을 제거합니다.
+- 스크롤 영역 아래, 8dp 하단 간격이 있는 실제 IME/시스템 삽입 바로 위에 동일한 너비의 완료 / 연습 선택으로 동작을 고정합니다. 각 작업의 최소 높이는 48dp입니다.
+- 요약 및 제시문/입력 카드를 버튼 행 바로 위에 8dp 간격으로 아래쪽 정렬합니다. 긴 콘텐츠는 작업과 관계없이 스크롤됩니다.
 
-## 0.14 — reachable Back and quieter buttons
-- Back from practice or results returns to selection; home retains system exit behavior.
+## 0.14 — 뒤로 가기와 차분한 버튼
+- 연습이나 결과로 돌아가서 선택으로 돌아갑니다. home은 시스템 종료 동작을 유지합니다.
 - Android 13+: register OnBackInvokedCallback at PRIORITY_OVERLAY only outside home so Back returns to selection even with the IME open. Android 9–12: tracked, uncanceled pre-IME Back on the editor routes to the same app callback; legacy Activity Back handles other focus states.
-- Returning to selection abandons the current exercise, exactly like the existing selection button; it does not submit a score.
-- Shared home/result actions and choices: minimum 48dp, 15sp, 8dp vertical padding. Practice actions: minimum 48dp, 14sp, 8dp padding. Heights remain flexible for larger fonts and wrapped labels.
-- Keep the 0.13 pinned two-action row and existing Enter completion option.
+- 선택 항목으로 돌아가면 기존 선택 버튼과 마찬가지로 현재 연습이 취소됩니다. 점수를 제출하지 않습니다.
+- 공유 홈/결과 작업 및 선택: 최소 48dp, 15sp, 8dp 수직 패딩. 연습 작업: 최소 48dp, 14sp, 8dp 패딩. 더 큰 글꼴과 래핑된 라벨의 경우 높이는 유연하게 유지됩니다.
+- 0.13 고정된 2액션 행과 기존 입력 완료 옵션을 유지합니다.
 
-## 0.15 — matched prompt/input space
-- Prompt and input text bodies have equal heights, measured from the prompt's actual wrapping at the current width/font size; minimum body height 48dp.
-- Use the same typeface, text size, line spacing and body padding for both. Remove the old fixed 64dp/two-line editor minimum.
-- Input exceeding the prompt's space scrolls within the native editor. Long cards retain the outer scroll; pinned actions stay available. No text mutation, scoring or extra text copies are introduced.
-- Re-measure after width/font changes; update editor height only when the measured prompt height changes.
-- Practice encouragement increases from 18sp to 20sp.
+## 0.15 — 제시문과 입력 공간 높이 맞춤
+- 제시문와 입력 텍스트 본문의 높이는 현재 너비/글꼴 크기에서 제시문의 실제 줄 바꿈을 기준으로 측정되어 동일합니다. 최소 본문 높이 48dp.
+- 두 가지 모두에 동일한 서체, 텍스트 크기, 줄 간격 및 본문 패딩을 사용합니다. 기존의 고정 64dp/2줄 편집기 최소값을 제거합니다.
+- 제시문 공간을 초과하는 입력은 기본 편집기 내에서 스크롤됩니다. 긴 카드는 바깥쪽 스크롤을 유지합니다. 고정된 동작은 계속 사용할 수 있습니다. 텍스트 변형, 채점 또는 추가 텍스트 사본이 도입되지 않습니다.
+- 너비/글꼴 변경 후 다시 측정합니다. 측정된 제시문 높이가 변경될 때만 편집기 높이를 업데이트합니다.
+- 연습 격려가 18sp에서 20sp로 증가합니다.
 
-## 0.16.1 — dismiss keyboard before leaving practice
+## 0.16.1 — 연습 종료 전 키보드 닫기
 - Overrides 0.14's immediate return with the IME open: first Back dismisses the system IME, keeping the same practice view, entered text, selection and session. Back after the keyboard is hidden returns to selection.
 - Android 13+ uses PRIORITY_DEFAULT so the IME can consume Back first. Android 9–12 uses native editor/IME dispatch without a custom pre-IME interceptor; Activity Back handles navigation after IME dismissal.
-- The existing bottom action row follows system/IME insets. Dismissing the IME moves 완료 / 연습 선택으로 to the screen bottom without re-rendering the practice scene. The explicit selection button still returns directly to selection.
-- Result/history Back behavior and local result storage are unchanged. Timing continues while practice stays visible with the keyboard hidden.
+- 하단 버튼은 시스템·키보드 인셋을 따릅니다. 키보드를 닫으면 연습 화면을 다시 만들지 않고 완료·연습 선택으로 버튼이 화면 아래로 이동합니다. 연습 선택 버튼은 즉시 선택 화면으로 돌아갑니다.
+- 결과/기록 뒤로 동작 및 로컬 결과 저장은 변경되지 않습니다. 키보드가 숨겨진 상태에서 연습이 계속 표시되는 동안 타이밍이 계속 유지됩니다.
 
 ## 0.18 motion
-Use UiMotion for short press and scene entry effects; selection surface fade is shared in UiControls. See MOTION.md. No animation on typed text or metric updates.
+짧게 누르기 및 화면 진입 효과를 위해 UiMotion을 사용합니다. 선택 표면 페이드는 UiControls에서 공유됩니다. MOTION.md를 참조하세요. 입력된 텍스트 또는 메트릭 업데이트에는 애니메이션이 없습니다.
 
-## 0.18.1 — softer motion tuning
-Supersedes the 0.18 numeric motion values: press scale 0.99 over 110ms; release 220ms; cubic (0.25, 0.1, 0.25, 1). Destination entry moves 6dp with alpha 0.96→1 over 240ms. Surface state fades enter over 180ms and exit over 120ms. Actions still execute immediately. Typing, IME/inset behavior and the scope of animated views are unchanged. Device smoothness has not been measured; this is visual timing/amplitude tuning.
+## 0.18.1 — 부드러운 모션 조정
+0.18 숫자 모션 값을 대체합니다. 110ms 동안 누를 때 0.99배로 줄어듭니다. 220ms 해제; 3차 베지어 곡선 (0.25, 0.1, 0.25, 1). 대상 항목은 240ms에 걸쳐 알파 0.96→1로 6dp를 이동합니다. 표면 상태 페이드는 180ms 이상 들어가고 120ms 이상 종료됩니다. 동작은 여전히 ​​즉시 실행됩니다. 입력, IME/삽입 동작 및 애니메이션 보기의 범위는 변경되지 않습니다. 장치의 부드러움은 측정되지 않았습니다. 이는 시각적인 타이밍/진폭 조정입니다.
 
-## 0.19 — synchronized IME motion
+## 0.19 — 키보드 동기화 모션
 - :ui ImeMotion.install(root, targets) synchronizes the practice scroll area (summary/card) and pinned action container with system keyboard animation on Android 11/API30+.
-- Root applies final system/IME padding through its existing inset listener. WindowInsetsAnimation.Callback applies only translationY = final padding minus current animated bottom inset; system duration/interpolation controls the motion, not an independent 240ms timer. It handles show/hide, resets on end/detach, and skips custom translation when animators are disabled.
-- No alpha on the editor, text rewriting, scoring changes, custom keyboard heights, per-frame requestLayout, or interception of keyboard control. Native visibility/insets remain authoritative, including zero-inset floating keyboards.
-- Android 9/10 keep existing adjustResize behavior without the new synchronized effect. On API30+ behavior still depends on the system/IME dispatching animation callbacks. Device frame smoothness and interrupted transitions remain to be validated physically.
-- Reference: https://developer.android.com/develop/ui/views/layout/sw-keyboard
+- 루트는 기존 삽입 리스너를 통해 최종 시스템/IME 패딩을 적용합니다. WindowInsetsAnimation.Callback는 translationY만 적용합니다 = 최종 패딩에서 현재 애니메이션 하단 삽입을 뺀 값; 시스템 기간/보간은 독립적인 240ms 타이머가 아닌 동작을 제어합니다. 표시/숨기기를 처리하고, 종료/분리 시 재설정하고, 애니메이터가 비활성화된 경우 사용자 정의 번역을 건너뜁니다.
+- 편집기에 알파 없음, 텍스트 재작성, 채점 변경, 사용자 정의 키보드 높이, 프레임당 requestLayout 또는 키보드 제어 차단 등이 있습니다. 제로 삽입 플로팅 키보드를 포함하여 기본 가시성/삽입은 여전히 ​​신뢰할 수 있습니다.
+- Android 9/10은 새로운 동기화 효과 없이 기존 adjustResize 동작을 유지합니다. API30+에서 동작은 여전히 ​​시스템/IME 디스패치 애니메이션 콜백에 따라 달라집니다. 장치 프레임의 부드러움과 중단된 전환은 물리적으로 검증되어야 합니다.
+- 참조: https://developer.android.com/develop/ui/views/layout/sw-keyboard
 
 ## 0.22 system dark theme
-Use context-selected UiPalettes.from(context) for rendered colors; preserve UiTokens dimensions. Dark green/sage role colors, native values-night widgets and system bars are specified in DARK_MODE.md.
+렌더링된 색상에는 컨텍스트 선택 UiPalettes.from(컨텍스트)를 사용합니다. UiTokens 치수를 유지합니다. 진한 녹색/현자 역할 색상, 기본 값-야간 위젯 및 시스템 표시줄은 DARK_MODE.md에 지정됩니다.
 
-## 0.23 — language lists and separate record details
-- Home → history has Korean/English choice tabs using the existing shared controls. Each language queries its own latest 100 records; filtering happens in SQLite before the limit.
-- List rows contain only completion date/time, practice type, units/minute and accuracy. Prompt/input text is not loaded with the summary query.
-- Tapping a UUID opens a separate in-app detail screen loaded by ID, including full prompt/input, units and active duration. Both system Back and 기록 목록으로 return to the originating language list.
-- Each language retains its own scroll offset. Restore happens after asynchronous rows finish layout, not while loading. Language, record UUID and both list offsets survive Activity recreation via Bundle. Missing records and database read errors have explicit states; history content is read-only.
-- Same SQLite schema/database and immutable scoring policy; no record migration or deletion. All screens use shared sage controls and context-selected light/dark palette.
+## 0.23 — 언어별 목록과 기록 상세
+- 홈 → 히스토리에는 기존 공유 컨트롤을 활용한 한/영 선택 탭이 있습니다. 각 언어는 자체 최신 100개 레코드를 쿼리합니다. 필터링은 제한 이전에 SQLite에서 발생합니다.
+- 목록 행에는 완료 날짜/시간, 연습 유형, 단위/분 및 ​​정확도만 포함됩니다. 제시문/입력 텍스트는 요약 쿼리와 함께 로드되지 않습니다.
+- UUID를 탭하면 전체 제시문/입력, 단위 및 활성 기간을 포함하여 ID가 로드한 별도의 앱 내 세부 정보 화면이 열립니다. 시스템 뒤로 및 기록 목록으로 모두 원래 언어 목록으로 돌아갑니다.
+- 각 언어는 고유한 스크롤 오프셋을 유지합니다. 복원은 로드하는 동안이 아니라 비동기 행이 레이아웃을 마친 후에 발생합니다. 언어, 레코드 UUID 및 두 목록 오프셋 모두 번들을 통해 활동 재생성을 유지합니다. 누락된 레코드 및 데이터베이스 읽기 오류에는 명시적인 상태가 있습니다. 기록 내용은 읽기 전용입니다.
+- 동일한 SQLite 스키마/데이터베이스 및 불변 채점 정책 기록 마이그레이션이나 삭제가 없습니다. 모든 화면은 공유된 세이지 컨트롤과 상황에 따라 선택된 밝은/어두운 팔레트를 사용합니다.
 
-## 0.23.1 — subdued dark actions
-- User requested reducing the bright mint area first, deferring keyboard-hidden layout decisions. Layout/insets/scroll/navigation/motion timing are unchanged.
-- Separate primary ACTION_FILL from the text/focus accent ACTION. Light fill remains the existing dark green. Dark primary fill is #223029 with soft text #D5DFD8 and a thin outline, replacing the large pale mint block.
-- Dark text/focus accent is muted #A0B4A6, selected fill #26382D. Dark ripples use translucent black #33000000 rather than a pale/green overlay. Native dark cursor/accent is updated consistently.
-- The panel has a dark tinted appearance using opaque solid fill; no blur, extra transparency layer or new offscreen rendering is introduced. Existing role contrast tests now check ON_ACTION against ACTION_FILL.
-- Keyboard-hidden practice placement remains a pending design decision, not changed in this patch.
+## 0.23.1 — 차분한 다크 모드 버튼
+- 사용자는 밝은 민트 영역을 먼저 줄이고 키보드에 숨겨진 레이아웃 결정을 연기하도록 요청했습니다. 레이아웃/삽입/스크롤/탐색/모션 타이밍은 변경되지 않습니다.
+- 기본 ACTION_FILL를 텍스트/초점 액센트 ACTION와 분리하세요. 밝은 채우기는 기존의 짙은 녹색으로 유지됩니다. 어두운 기본 채우기는 부드러운 텍스트 #D5DFD8과 얇은 윤곽선이 있는 #223029로 크고 창백한 민트 블록을 대체합니다.
+- 어두운 텍스트/초점 강조가 음소거됩니다 #A0B4A6, 채우기 #26382D가 선택되었습니다. 어두운 잔물결은 연한/녹색 오버레이 대신 반투명 검정색 #33000000을 사용합니다. 기본 어두운 커서/악센트가 지속적으로 업데이트됩니다.
+- 패널은 불투명한 단색 채우기를 사용하여 어두운 색조의 모양을 갖습니다. 흐림 없음, 추가 투명도 레이어 또는 새로운 오프스크린 렌더링이 도입되었습니다. 기존 역할 대조 테스트는 이제 ACTION_FILL에 대해 ON_ACTION를 확인합니다.
+- 키보드에 숨겨진 연습 배치는 보류 중인 디자인 결정으로 남아 있으며 이번 패치에서는 변경되지 않습니다.
 
-## 0.24 — reduce gaze travel when dismissing the keyboard
+## 0.24 — 키보드를 닫을 때 시선 이동 완화
 - On API30+, remember only a docked IME bottom actually observed in this window. When hidden, reserve the former IME area minus 48dp, keeping the prompt/editor and action row together near their prior position. Keep the existing 8dp gap within the group; do not move actions independently.
-- Clamp the retained reserve to leave at least 320dp of vertical window space (minus system top inset). Narrow/short windows retain scrolling and may move further to preserve usable space. Reset old IME memory on actual window geometry changes; floating IME with zero bottom inset clears docked reserve.
-- The motion module accepts an optional effective-bottom provider so animation progress uses the same reserved-space policy as final layout. This avoids a jump at animation end. No per-frame layout or text mutations are added.
-- Hide the small upper hint while the IME is visible; when hidden show: 입력칸을 누르면 이어서 연습할 수 있어. Keep the existing encouragement. No new cards/decorations.
-- Persist observed keyboard geometry with other practice Bundle state. API28/29 retain native adjustResize and omit the hint; the new limited-travel behavior requires API30 inset visibility/animation.
-- Timing continues while practice remains visible with keyboard hidden, as before. Back still dismisses keyboard first, then returns to selection. Palette, storage and scoring are unchanged.
+- 시스템 상단 인셋을 제외하고 세로 공간을 최소 320dp 남기도록 제한합니다. 작은 창은 스크롤을 유지하며, 창 크기가 바뀌거나 하단 인셋이 없는 플로팅 키보드를 쓰면 이전 키보드 영역을 초기화합니다.
+- 모션 모듈은 선택적 유효 하단 제공자를 허용하므로 애니메이션 진행은 최종 레이아웃과 동일한 예약 공간 정책을 사용합니다. 이렇게 하면 애니메이션이 끝날 때 점프하는 것을 방지할 수 있습니다. 프레임별 레이아웃이나 텍스트 변형이 추가되지 않습니다.
+- IME가 표시되는 동안 작은 위쪽 힌트를 숨깁니다. 숨겨진 경우 표시: 입력칸을 누르면 이어서 연습할 수 있어. 기존의 격려를 유지하십시오. 새로운 카드/장식은 없습니다.
+- 관찰된 키보드 형상을 다른 연습 번들 상태로 유지합니다. API28/29는 기본 adjustResize를 유지하고 힌트를 생략합니다. 새로운 제한된 이동 동작에는 API30 삽입 가시성/애니메이션이 필요합니다.
+- 이전과 같이 키보드가 숨겨져 있는 동안 연습이 계속 표시되는 동안 타이밍이 계속됩니다. 뒤로는 여전히 키보드를 먼저 닫은 다음 선택 항목으로 돌아갑니다. 팔레트, 저장 공간, 채점은 변경되지 않습니다.
 
-## 0.24.1 — compact practice typography and reachable long content
-- Practice prompt/editor reduce from20sp to18sp, with shared3dp extra line spacing; encouragement reduces20sp→18sp. Labels, system font scaling, equal prompt/editor body heights, buttons and other screens are unchanged.
-- Practice column now measures its natural content height (WRAP_CONTENT) while minimumHeight still fills the scroll viewport. Short exercises remain bottom-aligned. Long paragraphs can grow beyond the viewport and scroll from their true top, instead of bottom-aligning oversized children inside a forced viewport-height column and placing the summary above the scrollable origin.
-- Actions remain outside the scroll area. The limited keyboard-hide travel policy and input/scoring state remain unchanged. Long content may still require scrolling; it is not truncated or made arbitrarily tiny to force-fit.
+## 0.24.1 — 간결한 연습 글꼴과 긴 내용 스크롤
+- 연습 제시문/편집기는 20sp에서 18sp로 줄였으며, 공유된 3dp 추가 줄 간격이 있습니다. 격려가 20sp→18sp로 감소합니다. 라벨, 시스템 글꼴 크기 조정, 동일한 제시문/편집기 본문 높이, 버튼 및 기타 화면은 변경되지 않습니다.
+- 연습 열은 이제 minimumHeight가 여전히 스크롤 뷰포트를 채우는 동안 자연스러운 콘텐츠 높이(WRAP_CONTENT)를 측정합니다. 짧은 연습은 하단 정렬 상태로 유지됩니다. 긴 단락은 강제 뷰포트 높이 열 내에서 큰 하위 항목을 아래쪽에 정렬하고 스크롤 가능한 원점 위에 요약을 배치하는 대신 뷰포트를 넘어 실제 상단에서 스크롤할 수 있습니다.
+- 동작은 스크롤 영역 외부에 유지됩니다. 제한된 키보드 숨기기 여행 정책 및 입력/점수 상태는 변경되지 않습니다. 긴 콘텐츠에는 여전히 스크롤이 필요할 수 있습니다. 강제로 맞추기 위해 잘리거나 임의로 작게 만들어지지 않습니다.
 
 0.24.1 validation: 19 JVM tests and app/UI release lint passed. Optimized release paragraph smoke test passed in a 1080x1400 emulator window: after scrolling to the top, the language/mode/time/rate summary was within the scroll viewport; completion/save/history flow also passed. System UI's startup ANR overlay was dismissed before the passing run. Physical-device font comfort and scrolling remain subject to review.
 
-## 0.24.2 — truly equal, unclipped prompt/input areas
-- Previously the input height was capped at the prompt's measured height, although TextView and EditText can use different line breaking and native cursor/font padding. Equal outer bounds did not guarantee enough space for the input's last line.
-- Configure native multiline inputType before applying shared typography. Use identical simple line-breaking, no hyphenation, typeface, font padding, text size, spacing and horizontal padding. Disable the inner editor scrollbar; the shared outer scroll handles long cards.
-- Measure both native text layouts at natural height, then assign both bodies the greater height. Extra/wrapped/composing input can grow both areas; deletion can shrink them again. No snapshots or scoring work are added to input callbacks. Larger system fonts remain respected.
-- Result screen uses one shared compact action row: 다음 연습 / 연습 선택으로. Practice actions and history navigation are unchanged.
+## 0.24.2 — 높이가 같고 잘리지 않는 제시문과 입력 영역
+- 이전에는 TextView 및 EditText가 다른 줄 바꿈 및 기본 커서/글꼴 패딩을 사용할 수 있었지만 입력 높이는 제시문의 측정된 높이로 제한되었습니다. 동일한 외부 경계는 입력의 마지막 줄에 충분한 공간을 보장하지 않습니다.
+- 공유 타이포그래피를 적용하기 전에 기본 여러 줄 inputType를 구성하십시오. 동일한 단순 줄바꿈, 하이픈 없음, 서체, 글꼴 패딩, 텍스트 크기, 간격 및 가로 패딩을 사용합니다. 내부 편집기 스크롤바를 비활성화합니다. 공유된 외부 스크롤은 긴 카드를 처리합니다.
+- 기본 텍스트 레이아웃을 모두 자연스러운 높이로 측정한 다음 두 본문 모두 더 큰 높이를 할당합니다. 추가/래핑/구성 입력은 두 영역 모두 성장할 수 있습니다. 삭제하면 다시 축소될 수 있습니다. 입력 콜백에는 스냅샷이나 채점 작업이 추가되지 않습니다. 더 큰 시스템 글꼴은 그대로 유지됩니다.
+- 결과 화면은 하나의 공유 압축 버튼 행(다음 연습 / 연습 선택으로)을 사용합니다. 연습 동작과 기록 탐색은 변경되지 않습니다.
 
 0.24.2 validation: 19 JVM tests and release lint passed; 16 device checks passed, including equal body heights and full last-line capacity for matching paragraphs, longer composing input and24sp text. Optimized release paragraph completion/save/history smoke also passed after dismissing emulator launcher/System UI ANR overlays. Physical Samsung IME composition and font comfort remain to be reviewed on device.
 
-## 0.25 — separate equal practice cards
-- Replace the shared outer border/divider with two independent rounded cards: prompt and input, separated by8dp. The outer PracticeInputView only groups them; it has no fill/border/padding.
-- Both use the same width, shared card padding, native typography and measured body height. Measure natural bodies, share their maximum, and equalize total card heights when headers require extra space. Existing 48dp body minimum remains, with no fixed paragraph height.
-- Input focus highlights only the input card. Prompt retains a quiet outline. Both grow together for longer/composing input and remain inside the shared outer scroll; no scoring, IME callback or stored-data changes.
-- Result actions stay side-by-side from0.24.2. Keyboard-hide positioning, motion timing and light/dark palettes are unchanged.
+## 0.25 — 높이가 같은 독립 연습 카드
+- 공유된 외부 테두리/분할선을 두 개의 독립적인 둥근 카드(8dp로 구분된 제시문 및 입력)로 바꿉니다. 외부 PracticeInputView는 그룹화만 합니다. 채우기/테두리/패딩이 없습니다.
+- 둘 다 동일한 너비, 공유 카드 패딩, 기본 타이포그래피 및 측정된 본문 높이를 사용합니다. 헤더에 추가 공간이 필요한 경우 자연스러운 본문를 측정하고 최대값을 공유하며 총 카드 높이를 균등화합니다. 고정된 단락 높이 없이 기존 48dp 본문 최소 크기가 그대로 유지됩니다.
+- 입력 포커스는 입력 카드만 강조 표시합니다. 제시문는 조용한 개요를 유지합니다. 둘 다 더 긴/구성 입력을 위해 함께 성장하고 공유된 외부 스크롤 내부에 유지됩니다. 채점, IME 콜백 또는 저장된 데이터 변경이 없습니다.
+- 결과 동작은 0.24.2에서 나란히 유지됩니다. 키보드 숨기기 위치 지정, 모션 타이밍 및 밝은/어두운 팔레트는 변경되지 않았습니다.
 
-0.25 verification: 19 JVM tests, R8 release build and app/UI release lint passed. All16 device checks passed; matching paragraph, longer composing input and large-font cases assert equal body heights, equal total card widths/heights, and sufficient last-line capacity. Device assertions ran against the debug app; the new optimized release was built but not separately smoke-tested this patch. Physical visual review remains pending.
+0.25 verification: 19 JVM tests, R8 릴리즈 build and app/UI release lint passed. All16 device checks passed; matching paragraph, longer composing input and large-font cases assert equal body heights, equal total card widths/heights, and sufficient last-line capacity. Device assertions ran against the debug app; the new optimized release was built but not separately smoke-tested this patch. Physical visual review remains pending.
 
-## 0.26 — inline practice metrics and denser equal cards
-- Remove the standalone summary pill. The prompt header contains 제시문 at start and right-aligned language/mode/elapsed/rate (11sp). Raw entered-unit count is omitted only from live compact metrics; result/history units and calculation are unchanged. Metadata wraps instead of ellipsizing if width/font scale requires it; both headers/cards retain equal heights.
-- Practice cards use10dp horizontal/4dp vertical padding,6dp separation,2dp label vertical padding,4dp body bottom padding and40dp minimum body height. Retain18sp main text and native line wrapping. Both natural bodies and headers are equalized before total-card measurement.
-- Practice actions use13sp and a visually inset40dp surface within a48dp minimum touch target. Results keep the existing adjacent action row.
-- Cursor reveal expands to the full input card when the card fits inside its scroll viewport, helping avoid a clipped bottom border above pinned actions. Oversized content remains scrollable, with no unconditional forced full-card scrolling.
-- Compact formatter caches only visible values; legacy default formatting is retained for the Java0.9 golden fixture. No scoring/storage/input-text changes or per-keystroke formatting are introduced.
+## 0.26 — 간결한 연습 현황과 동일한 카드
+- 독립형 요약 알약을 제거합니다. 제시문 헤더에는 시작 시 제시문이 포함되고 오른쪽 정렬된 언어/모드/경과/속도(11sp)가 포함됩니다. 원시 입력 단위 수는 실시간 압축 측정항목에서만 생략됩니다. 결과/기록 단위 및 계산은 변경되지 않습니다. 너비/글꼴 크기에 필요한 경우 메타데이터는 줄임표 대신 줄 바꿈됩니다. 두 헤더/카드 모두 동일한 높이를 유지합니다.
+- 연습 카드는 가로 10dp/세로 패딩 4dp, 분리 6dp, 라벨 세로 패딩 2dp, 본문 하단 패딩 4dp 및 최소 본문 높이 40dp를 사용합니다. 18sp 기본 텍스트와 기본 줄 바꿈을 유지합니다. 전체 카드 측정 전에 자연 바디와 헤더가 모두 균등화됩니다.
+- 연습 작업에서는 13sp와 48dp 최소 터치 대상 내에 시각적으로 삽입된 40dp 표면을 사용합니다. 결과는 기존 인접 버튼 행을 유지합니다.
+- 카드가 스크롤 뷰포트 안에 들어갈 때 커서 표시는 전체 입력 카드로 확장되어 고정된 작업 위의 하단 테두리가 잘리는 것을 방지하는 데 도움이 됩니다. 무조건적인 강제 전체 카드 스크롤 없이 대형 콘텐츠는 스크롤 가능한 상태로 유지됩니다.
+- 컴팩트 포맷터는 보이는 값만 캐시합니다. 레거시 기본 형식은 Java0.9 골든 픽스처에 대해 유지됩니다. 채점/저장/입력 텍스트 변경이나 키 입력별 서식이 도입되지 않습니다.
 
 0.26 validation: 20 JVM tests and release lint passed. All16 device checks passed with wrapped metadata, equal card/body sizing and last-line capacity. Optimized release paragraph smoke passed with an observed Gboard IME window and full prompt text entered. Screenshot typing-compact-paragraph-0.26.png was visually inspected: both complete card outlines, all three text lines, inline metadata and actions are visible above the keyboard. Longer paragraphs/larger font scales may still need outer scrolling. Initial emulator System UI ANR overlay was dismissed before tests.
 
 ## 0.26.3 practice labels
-Prompt and input labels sit above their respective equal-sized content cards; metrics remain beside the prompt label. Long content continues to use the outer scroll viewport.
+제시문 및 입력 레이블은 각각 ​​동일한 크기의 콘텐츠 카드 위에 위치합니다. 측정항목은 제시문 라벨 옆에 남아 있습니다. 긴 콘텐츠는 계속해서 외부 스크롤 뷰포트를 사용합니다.
 
 ## 0.26.5 compact section tags
-Home section labels and practice prompt/input labels share a compact noninteractive outlined tag, with text retained for clarity and accessibility.
+홈 섹션 레이블과 연습 제시문/입력 레이블은 명확성과 접근성을 위해 텍스트가 유지된 간결한 비대화형 개요 태그를 공유합니다.
 
-## 0.27.14 — compact practice viewport (initial step)
-When usable practice height is below 320dp, the decorative encouragement header is hidden to free vertical space. The native scroll view and actions remain. This is not yet a two-pane adaptive layout or fold/hinge detection; real-device landscape, IME and resize testing remain outstanding.
+## 0.27.14 — 좁은 연습 화면 대응
+사용 가능한 연습 높이가 320dp 미만인 경우 장식적인 격려 헤더가 숨겨져 수직 공간을 확보할 수 있습니다. 기본 스크롤 보기와 동작은 그대로 유지됩니다. 이는 아직 두 창으로 구성된 적응형 레이아웃이나 접힘/경첩 감지가 아닙니다. 실제 장치 환경, IME 및 크기 조정 테스트는 여전히 뛰어납니다.
 
-## 0.27.15 — compact-height practice layout
-When practice viewport is under 260dp high and usable content width is at least 600dp, show prompt and editor columns side by side, unless system font scale exceeds 1.3. Layout changes reuse the same editor instance and native IME. Otherwise retain stacked layout and scrolling. Fold/hinge-aware layout and landscape variants for other screens are not implemented. Device validation remains necessary.
+## 0.27.15 — 높이가 낮은 연습 화면 배치
+연습 뷰포트 높이가 260dp 미만이고 사용 가능한 콘텐츠 너비가 600dp 이상인 경우 시스템 글꼴 배율이 1.3을 초과하지 않는 한 제시문와 편집기 열을 나란히 표시합니다. 레이아웃 변경은 동일한 편집기 인스턴스와 기본 IME를 재사용합니다. 그렇지 않으면 스택 레이아웃과 스크롤을 유지합니다. 다른 화면에 대한 접기/경첩 인식 레이아웃 및 가로 변형은 구현되지 않습니다. 장치 검증이 여전히 필요합니다.
 
-## 0.27.17 — wide history preview
-For history screens at configuration width 600dp or greater (font scale <=1.3), show the history list alongside an independently scrollable selected record. Narrow windows keep separate detail navigation. Re-layout on configuration change preserves stored list positions. Initial implementation uses a width heuristic and does not yet detect folds or hinges; validate actual window resizing, foldables and RTL on devices.
+## 0.27.17 — 넓은 화면의 기록 미리보기
+구성 너비가 600dp 이상(글꼴 크기 <=1.3)인 기록 화면의 경우 독립적으로 스크롤할 수 있는 선택된 기록과 함께 기록 목록을 표시합니다. 좁은 창은 별도의 세부 탐색을 유지합니다. 구성 변경 시 레이아웃을 다시 조정하면 저장된 목록 위치가 유지됩니다. 초기 구현에서는 너비 경험적 방법을 사용하며 아직 접힌 부분이나 경첩을 감지하지 않습니다. 기기에서 실제 창 크기 조정, 폴더블 및 RTL를 검증합니다.
 
-## 0.28.2 — launch splash
-- The launcher activity uses AndroidX Core SplashScreen so Android 9–11 and Android 12+ share the platform launch flow; no separate splash Activity or duplicate scene is added.
-- The centered splash mark is a static vector composition of the launcher key motif, “차곡 타자”, and “서두르지 말고, / 너만의 리듬으로.” All content stays within the Android splash icon safe area. Colors follow the light/dark sage palettes.
-- On a fresh activity launch, keep the native splash visible for at least 650ms so the brand can register; this is a bounded presentation interval, not a wait for storage or network. Restored Activity instances add no extra hold. Android controls the normal launch and exit motion.
-## 0.30.0 — compact history selection
+## 0.28.2 — 시작 화면
+- 런처 활동은 AndroidX Core SplashScreen를 사용하므로 Android 9~11 및 Android 12+는 플랫폼 실행 흐름을 공유합니다. 별도의 스플래시 활동이나 중복 화면이 추가되지 않습니다.
+- 중앙에 위치한 스플래시 마크는 런처 키 모티브인 "차곡 타자"와 "서두르지 말고, / 너만의 리듬으로"의 정적 벡터 구성입니다. 모든 콘텐츠는 Android 스플래시 아이콘 안전 영역 내에 유지됩니다. 색상은 밝은/어두운 세이지 팔레트를 따릅니다.
+- 새로운 활동 시작 시 브랜드가 등록될 수 있도록 기본 스플래시가 최소 650ms 동안 표시되도록 유지하세요. 이는 스토리지나 네트워크를 기다리는 것이 아니라 제한된 프리젠테이션 간격입니다. 복원된 활동 인스턴스는 추가 보류를 추가하지 않습니다. Android는 일반적인 실행 및 종료 동작을 제어합니다.
+## 0.30.0 — 간결한 기록 선택
 
-- Place the record count and selection entry together; selection mode shows select all, delete and cancel on one 48dp-minimum control row.
-- Use the shared 12dp section gap between the average card, selection row and record cards. Select all applies to the currently displayed filtered records (up to 100).
-- Keep existing language/type filters, detail navigation, long press, confirmation and restored history scroll positions. On small windows and enlarged text, controls can wrap; physical-device layout verification is pending.
+- 레코드 개수와 선택 항목을 함께 배치합니다. 선택 모드는 하나의 48dp 최소 제어 행에서 모두 선택, 삭제 및 취소를 표시합니다.
+- 평균 카드, 선택 행 및 기록 카드 사이의 공유 12dp 섹션 간격을 사용합니다. 모두 선택은 현재 표시된 필터링된 기록(최대 100개)에 적용됩니다.
+- 기존 언어/유형 필터, 세부 탐색, 길게 누르기, 확인 및 복원된 기록 스크롤 위치를 유지합니다. 작은 창과 확대된 텍스트에서는 컨트롤을 줄바꿈할 수 있습니다. 실제 장치 레이아웃 확인이 보류 중입니다.
 
-# Section labels over rounded cards
+# 둥근 카드 위의 섹션 라벨
 
-Use the shared `sectionTagAligned` for section pills directly above rounded cards or choices, including practice, results, and history detail. Its start tangent aligns with the card's corner tangent using the measured pill height, card radius, and layout direction. Standalone tags without an associated card may use `sectionTag`.
+연습, 결과 및 내역 세부정보를 포함하여 둥근 카드 또는 선택 항목 바로 위에 섹션 알약을 보려면 공유 `sectionTagAligned`를 사용하세요. 시작 접선은 측정된 알약 높이, 카드 반경 및 레이아웃 방향을 사용하여 카드의 모서리 접선과 정렬됩니다. 연관된 카드가 없는 독립형 태그는 `sectionTag`를 사용할 수 있습니다.
 
-Use `LABEL_SECTION_GAP` (12dp) before a labeled section and `LABEL_CONTENT_GAP` (8dp) between the label and its card or choices. In side-by-side practice, the latter is 2dp to preserve keyboard viewport space. Avoid adding an extra bottom margin to the preceding element. The first section in a pane can omit its leading gap where its layout requires it.
+라벨이 있는 섹션 앞에 `LABEL_SECTION_GAP`(12dp)를 사용하고 라벨과 해당 카드 또는 선택 사항 사이에 `LABEL_CONTENT_GAP`(8dp)를 사용하세요. 병렬 연습에서는 키보드 뷰포트 공간을 보존하기 위해 후자는 2dp입니다. 이전 요소에 추가 아래쪽 여백을 추가하지 마세요. 창의 첫 번째 섹션에서는 레이아웃에 필요한 선행 간격을 생략할 수 있습니다.
 

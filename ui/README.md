@@ -1,6 +1,6 @@
 # 0.20 module update
 
-Current boundaries and moved package paths are defined in MODULES.md at the project root. The six-module structure supersedes historical paths below.
+현재 경계와 이동된 패키지 경로는 프로젝트 루트의 MODULES.md에 정의됩니다. 6개 모듈 구조는 아래의 역사적 경로를 대체합니다.
 
 # 차곡 공통 UI 모듈
 
@@ -8,7 +8,7 @@ Current boundaries and moved package paths are defined in MODULES.md at the proj
 
 0.11부터 전체 앱은 :app/:practice/:ui로 구성합니다. 이 UI 모듈은 :practice를 참조하지 않습니다. 전체 의존성과 로직 모듈 설명은 프로젝트 루트 ARCHITECTURE.md 참조.
 
-Gradle Android Library `:ui` · namespace/package `dev.typing.ui` · minSdk 28 · compileSdk 37.
+Gradle Android 라이브러리 `:ui` · 네임스페이스/패키지 `dev.typing.ui` · minSdk 28 · compileSdk 37.
 
 0.10부터 구현과 테스트는 모두 Kotlin입니다. 구현 경로는 `src/main/kotlin/dev/typing/ui/`, 테스트 경로는 `src/test/kotlin/dev/typing/ui/`입니다. AGP 9.4.1의 내장 Kotlin 지원을 사용합니다.
 
@@ -87,12 +87,12 @@ UiControls.action(parent, "다음 연습", primary = true) { startExercise() }
 
 전체 제품 규약: 프로젝트 루트의 `DESIGN_SYSTEM.md`. 모듈은 로컬 프로젝트용 API이며 외부 Maven 배포나 API 안정성 보장 설정은 포함하지 않습니다.
 
-## 0.15 — matched prompt/input space
-- Prompt and input text bodies have equal heights, measured from the prompt's actual wrapping at the current width/font size; minimum body height 48dp.
-- Use the same typeface, text size, line spacing and body padding for both. Remove the old fixed 64dp/two-line editor minimum.
-- Input exceeding the prompt's space scrolls within the native editor. Long cards retain the outer scroll; pinned actions stay available. No text mutation, scoring or extra text copies are introduced.
-- Re-measure after width/font changes; update editor height only when the measured prompt height changes.
-- Practice encouragement increases from 18sp to 20sp.
+## 0.15 — 제시문과 입력 공간 높이 맞춤
+- 제시문와 입력 텍스트 본문의 높이는 현재 너비/글꼴 크기에서 제시문의 실제 줄 바꿈을 기준으로 측정되어 동일합니다. 최소 본문 높이 48dp.
+- 두 가지 모두에 동일한 서체, 텍스트 크기, 줄 간격 및 본문 패딩을 사용합니다. 기존의 고정 64dp/2줄 편집기 최소값을 제거합니다.
+- 제시문 공간을 초과하는 입력은 기본 편집기 내에서 스크롤됩니다. 긴 카드는 바깥쪽 스크롤을 유지합니다. 고정된 동작은 계속 사용할 수 있습니다. 텍스트 변형, 채점 또는 추가 텍스트 사본이 도입되지 않습니다.
+- 너비/글꼴 변경 후 다시 측정합니다. 측정된 제시문 높이가 변경될 때만 편집기 높이를 업데이트합니다.
+- 연습 격려가 18sp에서 20sp로 증가합니다.
 
 0.18 adds UiMotion.press(view) and UiMotion.enter(view), using native property animators and the shared motion specification in MOTION.md.
 
@@ -101,8 +101,8 @@ UiControls.action(parent, "다음 연습", primary = true) { startExercise() }
 
 0.22 adds UiPalette and UiPalettes.from(context) for system dark/light role colors; UiTokens retains shared dimensions and original light defaults. See DARK_MODE.md.
 
-## 0.25 — separate equal practice cards
-- Replace the shared outer border/divider with two independent rounded cards: prompt and input, separated by8dp. The outer PracticeInputView only groups them; it has no fill/border/padding.
-- Both use the same width, shared card padding, native typography and measured body height. Measure natural bodies, share their maximum, and equalize total card heights when headers require extra space. Existing 48dp body minimum remains, with no fixed paragraph height.
-- Input focus highlights only the input card. Prompt retains a quiet outline. Both grow together for longer/composing input and remain inside the shared outer scroll; no scoring, IME callback or stored-data changes.
-- Result actions stay side-by-side from0.24.2. Keyboard-hide positioning, motion timing and light/dark palettes are unchanged.
+## 0.25 — 높이가 같은 독립 연습 카드
+- 공유된 외부 테두리/분할선을 두 개의 독립적인 둥근 카드(8dp로 구분된 제시문 및 입력)로 바꿉니다. 외부 PracticeInputView는 그룹화만 합니다. 채우기/테두리/패딩이 없습니다.
+- 둘 다 동일한 너비, 공유 카드 패딩, 기본 타이포그래피 및 측정된 본문 높이를 사용합니다. 헤더에 추가 공간이 필요한 경우 자연스러운 본문를 측정하고 최대값을 공유하며 총 카드 높이를 균등화합니다. 고정된 단락 높이 없이 기존 48dp 본문 최소 크기가 그대로 유지됩니다.
+- 입력 포커스는 입력 카드만 강조 표시합니다. 제시문는 조용한 개요를 유지합니다. 둘 다 더 긴/구성 입력을 위해 함께 성장하고 공유된 외부 스크롤 내부에 유지됩니다. 채점, IME 콜백 또는 저장된 데이터 변경이 없습니다.
+- 결과 동작은 0.24.2에서 나란히 유지됩니다. 키보드 숨기기 위치 지정, 모션 타이밍 및 밝은/어두운 팔레트는 변경되지 않았습니다.

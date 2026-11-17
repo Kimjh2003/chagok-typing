@@ -1,6 +1,6 @@
 # 0.20 module update
 
-Current boundaries and moved package paths are defined in MODULES.md at the project root. The six-module structure supersedes historical paths below.
+현재 경계와 이동된 패키지 경로는 프로젝트 루트의 MODULES.md에 정의됩니다. 6개 모듈 구조는 아래의 역사적 경로를 대체합니다.
 
 # 모듈 구조 · 0.11
 
@@ -36,7 +36,7 @@ app의 완료 행동 → practice.finish → 고정 결과 → ui로 표시
 
 ## 디렉터리
 
-- app/src/main/kotlin/dev/typing/practice/: MainActivity, MetricsFormatter.
+- 앱/src/main/kotlin/dev/typing/practice/: MainActivity, MetricsFormatter.
 - practice/src/main/kotlin/dev/typing/practice/core/: 연습 엔진 4개 클래스/객체.
 - ui/src/main/kotlin/dev/typing/ui/: 공통 UI 3개 컴포넌트/토큰.
 
@@ -52,7 +52,7 @@ app의 완료 행동 → practice.finish → 고정 결과 → ui로 표시
 .\gradlew.bat :practice:test :practice:jar :app:testDebugUnitTest :ui:testDebugUnitTest :app:assembleDebug :app:lintDebug :ui:lintDebug
 ```
 
-이번 작업은 책임과 의존성 분리이며 UI/타수/정확도 정책 변경이나 실기기 속도 개선을 의미하지 않습니다. 실제 IME·기기·화면 전환 성능 검증은 계속 필요합니다. 기록 저장·독립 기능 화면 모듈은 해당 기능을 구현할 때 추가합니다.
+이번 동작은 책임과 의존성 분리이며 UI/타수/정확도 정책 변경이나 실기기 속도 개선을 의미하지 않습니다. 실제 IME·기기·화면 전환 성능 검증은 계속 필요합니다. 기록 저장·독립 기능 화면 모듈은 해당 기능을 구현할 때 추가합니다.
 
 0.11 검증 결과: 전체 앱 빌드·앱/UI Lint 통과. practice 6개 + app 2개 + ui 1개, 총 9개 테스트 통과. Java 0.9 기준 해시 비교도 통과했습니다. 추가로 app/ui를 포함하지 않는 별도 Gradle 설정에서 ANDROID_HOME/ANDROID_SDK_ROOT를 비우고 :practice:test 및 :practice:jar를 실행해 성공했습니다. 이는 로직 모듈의 Android SDK 독립성을 확인한 검사이며 실기기 UI/성능 검증은 아닙니다.
 

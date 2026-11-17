@@ -1,23 +1,13 @@
-# System dark theme — 0.22
+# 시스템 다크 모드
 
-The app follows system UI_MODE_NIGHT. Shared :ui UiPalette/UiPalettes contains immutable context-selected light and dark role colors; there is no mutable global theme and no per-input theme work. UiTokens retains dimensions and original light color defaults for compatibility. All rendered controls use the selected palette, including primary on-color, secondary buttons, choices, hints, card outlines, dividers, statistics and history.
+차곡은 시스템의 라이트·다크 모드 설정을 따릅니다. `:ui`의 `UiPalette`와 `UiPalettes`가 화면에 맞는 색상을 선택하고, 앱의 기본 테마와 시스템 바도 밝은 모드와 어두운 모드에 맞게 표시됩니다. 키보드 색상은 사용자가 선택한 키보드 앱의 설정을 따릅니다.
 
-Dark theme: deep green canvas #101813, surface #19251D, main text #E4EDE6 and sage accent #A9D7BD with dark button text #103525. Light theme preserves the prior palette. The ripple mask remains white because it defines alpha/shape, not a visible surface.
+화면 모드가 바뀌면 Android의 일반적인 Activity 재생성 절차를 사용합니다. 제시문, 입력 내용과 선택 위치, 언어·모드, 시간과 결과 식별자를 복원하도록 처리하며 저장된 연습 기록은 변경하지 않습니다. API 30 이상에서는 알려진 키보드 표시 상태도 복원하도록 요청하고, Android 9·10은 시스템의 복원 동작을 따릅니다.
 
-App values/values-night themes select native light/dark widgets, cursor/accent, launch background and system-bar appearance. System keyboards remain user-controlled; their own settings determine keyboard colors. No app-owned keyboard or forced keyboard recoloring is added. Android 9 follows its available night configuration; Android 10+ exposes the usual system dark-theme setting.
+## 색상 변경 이력
 
-uiMode changes use normal Activity recreation, not a manual scene rebuild that could discard state. Existing Bundle saves prompt, draft, selection, language/mode, timing, result identity and options. Restored practice requests input focus and, on API30+, restores known keyboard visibility. API28/29 rely on native system keyboard visibility restoration. Result resaving stays idempotent and stored history is unchanged.
+0.22에서 공통 팔레트와 시스템 다크 모드를 도입했습니다. 0.23.1에서는 큰 민트색 버튼이 지나치게 밝지 않도록 어두운 초록색과 부드러운 글자색을 사용하고 물결 효과도 반투명 검정으로 바꿨습니다. 0.26.2에서는 주요 버튼 `#355B47`, 정보 카드 `#1B2920`, 선택·보조 강조색 `#C3D4C8`로 계층을 더 잘 구분했습니다. 라이트 팔레트와 화면 배치는 이 변경의 대상이 아니었습니다. 현재 값은 `UiPalette.kt`를 기준으로 확인해 주세요.
 
-Verification: text role contrast >=4.5:1, editor outlines/focus >=3:1 in light and dark palettes. Existing typing/golden tests remain. Standalone R8 smoke harness can run with `-e themeSwitch true` to switch dark during input, check text/selection survival, save/view history and return to light; screenshots are written to its external files folder. Theme screenshots validate layout/color appearance separately from JVM tests. ARM64 physical-device and Samsung IME appearance require user/device review.
+## 검증 이력
 
-Verified: 15 JVM tests and release lint passed. On Android 36.1 emulator, optimized release switched from light to visibly dark during practice, retained text/selection, completed/saved and expanded history, then returned to visibly light. Captured dark practice/history screenshots were visually inspected. A System UI ANR dialog and a test screenshot-path issue were resolved before the final passing run; no app behavior workaround was added.
-
-## 0.23.1 — subdued dark actions
-- User requested reducing the bright mint area first, deferring keyboard-hidden layout decisions. Layout/insets/scroll/navigation/motion timing are unchanged.
-- Separate primary ACTION_FILL from the text/focus accent ACTION. Light fill remains the existing dark green. Dark primary fill is #223029 with soft text #D5DFD8 and a thin outline, replacing the large pale mint block.
-- Dark text/focus accent is muted #A0B4A6, selected fill #26382D. Dark ripples use translucent black #33000000 rather than a pale/green overlay. Native dark cursor/accent is updated consistently.
-- The panel has a dark tinted appearance using opaque solid fill; no blur, extra transparency layer or new offscreen rendering is introduced. Existing role contrast tests now check ON_ACTION against ACTION_FILL.
-- Keyboard-hidden practice placement remains a pending design decision, not changed in this patch.
-
-## 0.26.2 — clearer dark hierarchy
-Primary actions use a muted green #355B47 with light text; informational panels use #1B2920, and the brighter muted accent #C3D4C8 clarifies selection and secondary actions. Light colors and layouts are unchanged. Solid fills and black ripples retain the subdued dark appearance.
+팔레트 검사에서 일반 글자 대비 4.5:1 이상, 입력창 테두리와 포커스 대비 3:1 이상을 확인했습니다. 당시 JVM 테스트 15개와 릴리즈 lint가 통과했습니다. Android 36.1 에뮬레이터에서는 연습 중 다크 모드로 전환한 뒤 입력·선택 위치를 유지하고 결과 저장과 기록 확인을 거쳐 라이트 모드로 복귀하는 흐름을 확인했습니다. 에뮬레이터 시스템 UI 오류 창과 테스트 스크린샷 경로 문제를 해결한 뒤 최종 검사를 통과했습니다. ARM64 실기기와 삼성 키보드의 모양은 별도 확인이 필요합니다.
