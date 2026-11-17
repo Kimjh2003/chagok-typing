@@ -1,6 +1,6 @@
 # 과거 개발 기록 (보관용)
 
-이 문서는 이전 README를 보관한 것으로, 현재 기능과 빌드 지침은 [README.md](README.md)를 참고해줘.
+이 문서는 이전 README를 보관한 것으로, 현재 기능과 빌드 지침은 [README.md](README.md)를 참고해 주세요.
 
 # 0.20 module update
 
@@ -12,7 +12,7 @@ Current boundaries and moved package paths are defined in MODULES.md at the proj
 
 0.11: `:app → :practice`, `:app → :ui`의 3모듈 구성으로 분리. 연습 엔진은 순수 Kotlin/JVM `:practice`, 표시 문구(MetricsFormatter)와 화면/IME 연결은 앱, 공통 디자인은 UI에 유지. 테스트도 책임별로 분리. ARCHITECTURE.md 참조.
 
-0.10: 앱·공통 UI·테스트를 전부 Kotlin으로 전환하고 빌드 설정도 Kotlin DSL로 변경. 타수·정확도·타이머 정책 유지. 예문 배열은 PromptRepository에서 한 번만 준비하고 화면 폭 제한/버튼/결과 표시의 중복을 정리했다. Kotlin 전환 자체의 실기기 속도 개선은 아직 측정하지 않았다.
+0.10: 앱·공통 UI·테스트를 전부 Kotlin으로 전환하고 빌드 설정도 Kotlin DSL로 변경. 타수·정확도·타이머 정책 유지. 예문 배열은 PromptRepository에서 한 번만 준비하고 화면 폭 제한/버튼/결과 표시의 중복을 정리했습니다. Kotlin 전환 자체의 실기기 속도 개선은 아직 측정하지 않았습니다.
 
 0.9: 연습 상태/시간을 PracticeSession, 표시 문자열 캐시를 MetricsFormatter, 완료 채점을 FinalScore로 분리. 홈/결과의 통계 예약 중단, 변화 없는 통계 문자열 생성 생략, 완료 시 타수 재집계 제거. 입력·UI·계산 정책은 유지. 처리 흐름과 검증은 INPUT_LOGIC.md 참조.
 
@@ -58,24 +58,24 @@ Current boundaries and moved package paths are defined in MODULES.md at the proj
 - 백그라운드에서는 측정 일시 정지, 복귀 시 재개. 이는 초안 정책이며 최종 확정 전.
 
 ## 지표
-속도 = 현재 입력에 남은 환산 타수 × 60,000 / 활성 연습 시간(ms). 최근 60초 이동 평균이 아닌 연습 시작부터의 평균 타/분이다. 시작 후 1초까지 실시간 속도는 측정 중으로 표시한다. 오타도 입력량에 포함하며 일치율은 별도로 표시한다.
+속도 = 현재 입력에 남은 환산 타수 × 60,000 / 활성 연습 시간(ms). 최근 60초 이동 평균이 아닌 연습 시작부터의 평균 타/분입니다. 시작 후 1초까지 실시간 속도는 측정 중으로 표시합니다. 오타도 입력량에 포함하며 일치율은 별도로 표시합니다.
 
-한글은 초성·중성·종성으로 분해하고 복합 모음(ㅘㅙㅚㅝㅞㅟㅢ)과 겹받침은 각 2타, 쌍자음은 1타로 계산한다. 예: 한글=6타, 과=3타, 값=4타, 까=2타. 이는 앱의 초기 계산 정책이며 모든 타자 프로그램의 공통 표준이라고 주장하지 않는다. 영문 ASCII 문자·숫자·공백·문장부호는 각 1타. Shift·삭제 키, 줄바꿈·탭, 이모지는 제외한다.
+한글은 초성·중성·종성으로 분해하고 복합 모음(ㅘㅙㅚㅝㅞㅟㅢ)과 겹받침은 각 2타, 쌍자음은 1타로 계산합니다. 예: 한글=6타, 과=3타, 값=4타, 까=2타. 이는 앱의 초기 계산 정책이며 모든 타자 프로그램의 공통 표준이라고 주장하지 않습니다. 영문 ASCII 문자·숫자·공백·문장부호는 각 1타. Shift·삭제 키, 줄바꿈·탭, 이모지는 제외합니다.
 
-실제 IME 터치 이벤트 수가 아니라 텍스트를 환산한 수치다. 삭제한 과거 입력은 누적하지 않으며 붙여넣기/자동 수정 결과는 텍스트 입력과 동일하게 계산하므로 경쟁용 기록으로 검증된 지표는 아니다. 일치율은 같은 위치의 일치 글자 수를 원문/입력 중 긴 길이로 나눈 값이다. 중간 삽입/삭제 이후 차이는 연쇄 불일치로 계산한다.
+실제 IME 터치 이벤트 수가 아니라 텍스트를 환산한 수치다. 삭제한 과거 입력은 누적하지 않으며 붙여넣기/자동 수정 결과는 텍스트 입력과 동일하게 계산하므로 경쟁용 기록으로 검증된 지표는 아닙니다. 일치율은 같은 위치의 일치 글자 수를 원문/입력 중 긴 길이로 나눈 값입니다. 중간 삽입/삭제 이후 차이는 연쇄 불일치로 계산합니다.
 
 한글 분해 참고: https://www.unicode.org/versions/Unicode18.0.0/core-spec/chapter-3/ (Hangul Syllable Decomposition). 복합 자모 가중치는 위 앱 정책으로 별도 적용.
 
-계산 검증: app/src/test/kotlin/dev/typing/practice/LogicTest.kt. 기존 예시·조합·속도·현대 한글 11,172자 및 편집 3,000건을 검사한다. 전환 전에 저장한 Java 0.9 결과 해시와 Kotlin 결과가 일치하는지 비교한다. 이는 실제 IME 호환성/지연 검증을 대체하지 않는다.
+계산 검증: app/src/test/kotlin/dev/typing/practice/LogicTest.kt. 기존 예시·조합·속도·현대 한글 11,172자 및 편집 3,000건을 검사합니다. 전환 전에 저장한 Java 0.9 결과 해시와 Kotlin 결과가 일치하는지 비교합니다. 이는 실제 IME 호환성/지연 검증을 대체하지 않습니다.
 
 ## 범위와 남은 작업
-- minSdk 28, compileSdk/targetSdk 37. 네이티브 .so 없이 Kotlin + Android 플랫폼 Views로 구현되어 ARM64에서 실행 가능한 범용 APK이며 ARM64 전용 패키지는 아니다.
-- 앱과 UI는 Kotlin, Gradle은 Kotlin DSL 사용. Compose로 화면 기술을 변경한 것은 아니다.
+- minSdk 28, compileSdk/targetSdk 37. 네이티브 .so 없이 Kotlin + Android 플랫폼 Views로 구현되어 ARM64에서 실행 가능한 범용 APK이며 ARM64 전용 패키지는 아닙니다.
+- 앱과 UI는 Kotlin, Gradle은 Kotlin DSL 사용. Compose로 화면 기술을 변경한 것은 아닙니다.
 - 힌지 위치 감지·회피, 탁상 자세별 배치, 태블릿 2열 레이아웃은 미구현. 현재는 너비 제한 단일 열.
-- Activity 재생성/프로세스 복구 시 한글 조합 span과 선택 범위 양끝의 완전 복원은 보장하지 않는다. 크기/방향 변경은 configChanges로 재생성을 피한다.
+- Activity 재생성/프로세스 복구 시 한글 조합 span과 선택 범위 양끝의 완전 복원은 보장하지 않습니다. 크기/방향 변경은 configChanges로 재생성을 피합니다.
 - 다크 테마, 앱 내 글자 크기 조절, 기록 저장, 영문 WPM 별도 표시, 오타 하이라이트는 후속 작업.
-- 자동 수정 금지 플래그는 키보드에 대한 요청이며 모든 IME의 동작을 강제하지 않는다.
-- ARM64 실기기·Android 9/17·한글 IME·폴더블 및 입력 지연 분포 검증은 아직 수행하지 않았다.
+- 자동 수정 금지 플래그는 키보드에 대한 요청이며 모든 IME의 동작을 강제하지 않습니다.
+- ARM64 실기기·Android 9/17·한글 IME·폴더블 및 입력 지연 분포 검증은 아직 수행하지 않았습니다.
 
 ## 빌드
 Android Studio에서 이 폴더를 열거나 JDK 17 이상과 Android SDK 37 환경에서 실행:
@@ -84,11 +84,11 @@ Android Studio에서 이 폴더를 열거나 JDK 17 이상과 Android SDK 37 환
 .\gradlew.bat :app:assembleDebug
 ```
 
-SDK 경로는 ANDROID_HOME 또는 로컬 local.properties의 sdk.dir로 지정한다. Gradle wrapper 포함. 인터넷 연결이 필요한 최초 의존성 설치가 있을 수 있다.
+SDK 경로는 ANDROID_HOME 또는 로컬 local.properties의 sdk.dir로 지정합니다. Gradle wrapper 포함. 인터넷 연결이 필요한 최초 의존성 설치가 있을 수 있습니다.
 
 디버그 APK: app/build/outputs/apk/debug/app-debug.apk
 
-디버그 서명 빌드로 개인 테스트용이다. 출시 서명 및 배포 설정은 포함하지 않는다.
+디버그 서명 빌드로 개인 테스트용입니다. 출시 서명 및 배포 설정은 포함하지 않습니다.
 
 ## 0.13 — practice actions within reach
 - Current Korean/English prompts, including paragraphs, contain no explicit newlines; visual wrapping does not require Enter.
@@ -208,4 +208,4 @@ All screens follow system dark/light mode with shared :ui palettes. Existing inp
 0.26.1 validation: 20 JVM tests and release lint passed. All19 device checks passed, including same-process Activity finish/relaunch and subsequent save/read, queued-write drain and closed-store failure callbacks. Optimized release black-box smoke also passed launch/input/save/history and Activity finish/relaunch/history access. Initial cold-start crash was fixed by initializing DecorView; an emulator System UI ANR overlay was dismissed before UI smoke. Physical ARM64 review remains pending.
 
 ## 0.27 연습 구성
-새 연습은 한국어·영어 단어와 문장만 제공한다. 언어별 단어 20개, 문장 15개를 순서대로 순환한다. 기존 문단 기록과 복원된 연습은 유지하며, 새 연습을 시작하면 문장으로 전환한다.
+새 연습은 한국어·영어 단어와 문장만 제공합니다. 언어별 단어 20개, 문장 15개를 순서대로 순환합니다. 기존 문단 기록과 복원된 연습은 유지하며, 새 연습을 시작하면 문장으로 전환합니다.

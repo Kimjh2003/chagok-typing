@@ -1,10 +1,10 @@
 # 공통 버튼 규약 · 0.2
 
-현재(0.10) 구현은 ui/src/main/kotlin/dev/typing/ui/UiControls.kt와 UiTokens.kt다. 아래 Java 경로는 과거 기록이다.
+현재(0.10) 구현은 ui/src/main/kotlin/dev/typing/ui/UiControls.kt와 UiTokens.kt다. 아래 Java 경로는 과거 기록입니다.
 
-> 최신 기준은 DESIGN_SYSTEM.md의 차곡 UI 규약 v1이다. 이 파일은 기존 버튼 변경 기록으로 유지하며 충돌 시 최신 규약을 따른다.
+> 최신 기준은 DESIGN_SYSTEM.md의 차곡 UI 규약 v1입니다. 이 파일은 기존 버튼 변경 기록으로 유지하며 충돌 시 최신 규약을 따릅니다.
 
-0.7부터 정보는 밝은 세이지 중립색, 선택은 더 진한 세이지/녹색으로 구분한다. 아래 청회색 팔레트 기록은 과거 버전에만 해당한다. 최신 값은 UiTokens.java와 DESIGN_SYSTEM.md의 0.7 절 참조.
+0.7부터 정보는 밝은 세이지 중립색, 선택은 더 진한 세이지/녹색으로 구분합니다. 아래 청회색 팔레트 기록은 과거 버전에만 해당합니다. 최신 값은 UiTokens.java와 DESIGN_SYSTEM.md의 0.7 절 참조.
 
 ## 0.4 색상 역할 업데이트 (이전 라벨 색 규약보다 우선)
 - 녹색 채움/체크: 선택 상태와 실행 버튼.
