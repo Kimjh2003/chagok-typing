@@ -58,4 +58,3 @@ Windows PowerShell에서:
 단위 테스트와 Android 계측 테스트 소스가 포함되어 있습니다. 기기·IME·화면 크기마다 실제 동작이 다를 수 있으므로 폴더블, 여러 키보드와 Android 버전에서의 추가 실기기 검증이 필요합니다. 성능 최적화는 기기별 지연이나 프레임 개선을 보장하는 측정 결과가 아닙니다.
 
 - [아키텍처](ARCHITECTURE.md) · [모션](MOTION.md) · [기록 저장](RESULT_HISTORY.md)
-- [이전 README와 개발 이력](LEGACY_CHANGELOG.md) — 과거 버전 기록이며 현재 사양과 다를 수 있습니다.
